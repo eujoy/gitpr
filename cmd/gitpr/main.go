@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Angelos-Giannis/gitpr/internal/app/infra/command"
+	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/infra/pullrequests"
 	"github.com/Angelos-Giannis/gitpr/internal/infra/userrepos"
 	"github.com/Angelos-Giannis/gitpr/pkg/github"
@@ -18,35 +19,36 @@ import (
 
 // Define the app details as constants
 const (
-	appName = "CLI tool to check status of pull requests in github."
-	appUsage = ""
-	appAuthor = "Angelos Giannis"
-	appVersion = "1.0.0"
-
-	requestTimeout = 5
+	configurationFile = "configuration.yaml"
 )
 
 func main() {
-	var app = cli.NewApp()
-	info(app)
+	cfg, err := config.New(configurationFile)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	gcl := githttp.NewClient(&http.Client{Timeout: requestTimeout * time.Second})
+	var app = cli.NewApp()
+	info(app, cfg)
+
+	gcl := githttp.NewClient(&http.Client{Timeout: cfg.Github.Timeout * time.Second}, cfg)
 	gr := github.NewResource(gcl)
 
 	tp := printer.NewTablePrinter()
-	u := utils.NewUtils()
+	u := utils.NewUtils(cfg)
 
 	urSrv := userrepos.NewService(gr)
 	prSrv := pullrequests.NewService(gr)
 
-	b := command.NewBuilder(urSrv, prSrv, tp, u)
+	b := command.NewBuilder(cfg, urSrv, prSrv, tp, u)
 
 	app.Commands = b.
 		UserRepos().
 		PullRequests().
 		GetCommands()
 
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		fmt.Printf("Error : %v", err)
 		os.Exit(1)
@@ -54,9 +56,9 @@ func main() {
 }
 
 // info sets up the information of the tool.
-func info(app *cli.App) {
-	app.Name = appName
-	app.Usage = appUsage
-	app.Author = appAuthor
-	app.Version = appVersion
+func info(app *cli.App, cfg config.Config) {
+	app.Author = cfg.Application.Author
+	app.Name = cfg.Application.Name
+	app.Usage = cfg.Application.Usage
+	app.Version = cfg.Application.Version
 }

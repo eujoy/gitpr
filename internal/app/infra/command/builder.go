@@ -3,6 +3,7 @@ package command
 import (
 	"github.com/Angelos-Giannis/gitpr/internal/app/infra/command/pullrequests"
 	"github.com/Angelos-Giannis/gitpr/internal/app/infra/command/userrepos"
+	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
 	"github.com/urfave/cli"
 )
@@ -29,6 +30,7 @@ type utilities interface{
 // Builder describes the builder of the cli commands.
 type Builder struct {
 	commands            []cli.Command
+	cfg                 config.Config
 	userReposService    userReposService
 	pullRequestsService pullRequestsService
 	tablePrinter        tablePrinter
@@ -36,9 +38,10 @@ type Builder struct {
 }
 
 // NewBuilder creates and returns a new command builder.
-func NewBuilder(userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utils utilities) *Builder {
+func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utils utilities) *Builder {
 	return &Builder{
 		commands:            []cli.Command{},
+		cfg:                 cfg,
 		userReposService:    userReposService,
 		pullRequestsService: pullRequestsService,
 		tablePrinter:        tablePrinter,
@@ -53,7 +56,7 @@ func (b *Builder) GetCommands() []cli.Command {
 
 // UserRepos retrieves the repositories that the authenticated used has access to.
 func (b *Builder) UserRepos() *Builder {
-	userReposCmd := userrepos.NewCmd(b.userReposService, b.tablePrinter, b.utils)
+	userReposCmd := userrepos.NewCmd(b.cfg, b.userReposService, b.tablePrinter, b.utils)
 	b.commands = append(b.commands, userReposCmd)
 
 	return b
@@ -61,7 +64,7 @@ func (b *Builder) UserRepos() *Builder {
 
 // PullRequests retrieves the pull requests that the authenticated user has in a specific repo.
 func (b *Builder) PullRequests() *Builder {
-	pullRequestsCmd := pullrequests.NewCmd(b.pullRequestsService, b.tablePrinter, b.utils)
+	pullRequestsCmd := pullrequests.NewCmd(b.cfg, b.pullRequestsService, b.tablePrinter, b.utils)
 	b.commands = append(b.commands, pullRequestsCmd)
 
 	return b

@@ -6,13 +6,10 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
 	"github.com/briandowns/spinner"
 	"github.com/urfave/cli"
-)
-
-const (
-	defaultPageSize = 10
 )
 
 type service interface{
@@ -30,7 +27,7 @@ type utilities interface{
 }
 
 // NewCmd creates a new command to retrieve the repos of a user.
-func NewCmd(service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
+func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
 	var authToken string
 	var pageSize  int
 
@@ -49,13 +46,13 @@ func NewCmd(service service, tablePrinter tablePrinter, utilities utilities) cli
 			cli.IntFlag{
 				Name:        "page_size, s",
 				Usage:       "Size of each page to load.",
-				Value:       defaultPageSize,
+				Value:       cfg.Defaults.PageSize,
 				Destination: &pageSize,
 				Required:    false,
 			},
 		},
 		Action: func(c *cli.Context) {
-			spinLoader := spinner.New(spinner.CharSets[4], 200*time.Millisecond, spinner.WithHiddenCursor(true))
+			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time * time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
 			currentPage := 1
 			shallContinue := true

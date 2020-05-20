@@ -24,6 +24,7 @@ func NewService(resource resource) *Service {
 	}
 }
 
+// @todo Improve performance of the flow.
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
 func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error) {
 	pullRequests, err := s.resource.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, pageNumber)

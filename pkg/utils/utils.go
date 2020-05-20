@@ -4,14 +4,20 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/Angelos-Giannis/gitpr/internal/config"
 )
 
 // Utils describes the common utilities package.
-type Utils struct {}
+type Utils struct {
+	cfg config.Config
+}
 
 // NewUtils create and return a new utilities struct.
-func NewUtils() *Utils {
-	return &Utils{}
+func NewUtils(cfg config.Config) *Utils {
+	return &Utils{
+		cfg: cfg,
+	}
 }
 
 // ClearTerminalScreen clears up the screen to get the new data in.
@@ -30,12 +36,12 @@ func (u *Utils) GetPageOptions(respLength int, pageSize int, currentPage int) []
 	var options []string
 
 	if respLength == pageSize {
-		options = append(options, "next")
+		options = append(options, u.cfg.Pagination.Next)
 	}
 	if currentPage > 1 {
-		options = append(options, "previous")
+		options = append(options, u.cfg.Pagination.Previous)
 	}
-	options = append(options, "exit")
+	options = append(options, u.cfg.Pagination.Exit)
 
 	return options
 }
@@ -43,16 +49,16 @@ func (u *Utils) GetPageOptions(respLength int, pageSize int, currentPage int) []
 // GetNextPageNumberOrExit reads user input and returns if the process shall continue or not.
 func (u *Utils) GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool) {
 	switch surveySelection {
-	case "next":
+	case u.cfg.Pagination.Next:
 		currentPage++
 		return currentPage, true
-	case "previous":
+	case u.cfg.Pagination.Previous:
 		currentPage--
 		if currentPage < 0 {
 			currentPage = 0
 		}
 		return currentPage, true
-	case "exit":
+	case u.cfg.Pagination.Exit:
 		return 0, false
 	}
 

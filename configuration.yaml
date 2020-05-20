@@ -1,0 +1,26 @@
+application:
+  author: "Angelos Giannis"
+  name: "GitPullRequests"
+  usage: "CLI tool to check status of pull requests in github."
+  version: "0.0.1"
+defaults:
+  allowed_pull_request_states: ["all", "open", "closed"]
+  base_branch: "develop"
+  page_size: 10
+  pull_request_state: "open"
+github:
+  api_url: "https://api.github.com"
+  endpoints:
+    get_review_status_of_pull_request: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/reviews"
+    get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"
+    get_user_pull_requests_for_repo: "/repos/{repoOwner}/{repository}/pulls?state={prState}&per_page={pageSize}&page={pageNumber}&{baseBranch}&sort=created&direction=desc"
+  headers:
+    accept: "application/vnd.github.sailor-v-preview+json"
+pagination:
+  next: "Next"
+  previous: "Previous"
+  exit: "Exit"
+spinner:
+  hide_cursor: true
+  type: 4
+  time: 200

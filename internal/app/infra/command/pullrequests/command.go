@@ -6,16 +6,10 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
 	"github.com/briandowns/spinner"
 	"github.com/urfave/cli"
-)
-
-var (
-	defaultPageSize = 10
-	defaultPrState = "open"
-
-	availablePrStates = []string{"all", "open", "closed"}
 )
 
 type service interface{
@@ -33,7 +27,7 @@ type utilities interface{
 }
 
 // NewCmd creates a new command to retrieve pull requests for a repo.
-func NewCmd(service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
+func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
 	var authToken, repoOwner, repository, baseBranch, prState string
 	var pageSize  int
 
@@ -66,32 +60,32 @@ func NewCmd(service service, tablePrinter tablePrinter, utilities utilities) cli
 			cli.StringFlag{
 				Name:        "base, b",
 				Usage:       "Base branch to check pull requests against.",
-				Value:       "",
+				Value:       cfg.Defaults.BaseBranch,
 				Destination: &baseBranch,
 				Required:    false,
 			},
 			cli.StringFlag{
 				Name:        "state, a",
 				Usage:       "State of the pull request.",
-				Value:       defaultPrState,
+				Value:       cfg.Defaults.PullRequestState,
 				Destination: &prState,
 				Required:    false,
 			},
 			cli.IntFlag{
 				Name:        "page_size, s",
 				Usage:       "Size of each page to load.",
-				Value:       defaultPageSize,
+				Value:       cfg.Defaults.PageSize,
 				Destination: &pageSize,
 				Required:    false,
 			},
 		},
 		Action: func(c *cli.Context) {
-			spinLoader := spinner.New(spinner.CharSets[4], 200*time.Millisecond, spinner.WithHiddenCursor(true))
+			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time * time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
 			currentPage := 1
 			shallContinue := true
 
-			prState = validatePrStateAndGetDefault(prState)
+			prState = validatePrStateAndGetDefault(cfg, prState)
 
 			for {
 				utilities.ClearTerminalScreen()
@@ -132,12 +126,12 @@ func NewCmd(service service, tablePrinter tablePrinter, utilities utilities) cli
 
 // validatePrStateAndGetDefault checks if the requested state of pull requests is valid and returns
 // it in case it is, otherwise it returns the default pull request state.
-func validatePrStateAndGetDefault(prState string) string {
-	for _, prs := range availablePrStates {
+func validatePrStateAndGetDefault(cfg config.Config, prState string) string {
+	for _, prs := range cfg.Defaults.AllowedPullRequestStates {
 		if prState == prs {
 			return prState
 		}
 	}
 
-	return defaultPrState
+	return cfg.Defaults.PullRequestState
 }

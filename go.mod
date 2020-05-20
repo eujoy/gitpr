@@ -7,4 +7,5 @@ require (
 	github.com/briandowns/spinner v1.11.1
 	github.com/jedib0t/go-pretty/v6 v6.0.1
 	github.com/urfave/cli v1.22.4
+	gopkg.in/yaml.v2 v2.2.2
 )
