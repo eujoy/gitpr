@@ -1,0 +1,17 @@
+version: "3.3"
+
+services:
+  gitpr:
+    image: gitpr
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: gitpr
+    restart: on-failure
+    ports:
+      - "9999:9999"
+    networks:
+      - gitpr
+
+networks:
+  gitpr:

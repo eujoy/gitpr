@@ -39,6 +39,7 @@ func NewHandler(cfg config.Config, userReposService userReposService, pullReques
 	}
 }
 
+// GetDefaultSettings returns the default values for the service.
 func (h *Handler) GetDefaultSettings(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		w.Header().Set("Content-Type", "application/json")

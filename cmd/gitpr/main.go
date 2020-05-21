@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -47,11 +46,7 @@ func main() {
 	case "http":
 		startUpHttpServer(cfg, urSrv, prSrv)
 	default:
-		fmt.Println(cfg.Service)
-
-		err := errors.New("invalid service mode provided in configuration")
-		fmt.Printf("Error starting the service : %v\n", err)
-		os.Exit(1)
+		startUpCliService(app, cfg, urSrv, prSrv)
 	}
 }
 

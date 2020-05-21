@@ -2,16 +2,21 @@ package github
 
 import (
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
-	"github.com/Angelos-Giannis/gitpr/pkg/github/http"
 )
+
+type githubClient interface {
+	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
+}
 
 // Resource describes the github resource.
 type Resource struct {
-	githubClient *http.Client
+	githubClient githubClient
 }
 
 // NewResource prepares and returns a github resource.
-func NewResource(githubClient *http.Client) *Resource {
+func NewResource(githubClient githubClient) *Resource {
 	return &Resource{
 		githubClient: githubClient,
 	}

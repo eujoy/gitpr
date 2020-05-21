@@ -1,9 +1,8 @@
 version: "3.3"
 
 service:
-  mode: "cli"
-#  mode: "http"
-#  port: "9999"
+  mode: "{serviceMode}"
+  port: "{servicePort}"
 application:
   author: "Angelos Giannis"
   name: "GitPullRequests"
