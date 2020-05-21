@@ -1,10 +1,10 @@
 package command
 
 import (
-	"github.com/Angelos-Giannis/gitpr/internal/app/infra/command/pullrequests"
-	"github.com/Angelos-Giannis/gitpr/internal/app/infra/command/userrepos"
 	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
+	"github.com/Angelos-Giannis/gitpr/internal/infra/command/pullrequests"
+	"github.com/Angelos-Giannis/gitpr/internal/infra/command/userrepos"
 	"github.com/urfave/cli"
 )
 

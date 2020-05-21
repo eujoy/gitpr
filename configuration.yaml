@@ -1,3 +1,9 @@
+version: "3.3"
+
+service:
+  mode: "cli"
+#  mode: "http"
+#  port: "9999"
 application:
   author: "Angelos Giannis"
   name: "GitPullRequests"
@@ -8,14 +14,15 @@ defaults:
   base_branch: "develop"
   page_size: 10
   pull_request_state: "open"
-github:
-  api_url: "https://api.github.com"
-  endpoints:
-    get_review_status_of_pull_request: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/reviews"
-    get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"
-    get_user_pull_requests_for_repo: "/repos/{repoOwner}/{repository}/pulls?state={prState}&per_page={pageSize}&page={pageNumber}&{baseBranch}&sort=created&direction=desc"
-  headers:
-    accept: "application/vnd.github.sailor-v-preview+json"
+clients:
+  github:
+    api_url: "https://api.github.com"
+    endpoints:
+      get_review_status_of_pull_request: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/reviews"
+      get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"
+      get_user_pull_requests_for_repo: "/repos/{repoOwner}/{repository}/pulls?state={prState}&per_page={pageSize}&page={pageNumber}&{baseBranch}&sort=created&direction=desc"
+    headers:
+      accept: "application/vnd.github.sailor-v-preview+json"
 pagination:
   next: "Next"
   previous: "Previous"

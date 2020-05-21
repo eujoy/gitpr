@@ -28,7 +28,7 @@ func NewClient(httpClient *http.Client, configuration config.Config) *Client {
 
 // GetUserRepos retrieves all the usekkr repositories from github.
 func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Github.APIURL, c.configuration.Github.Endpoints.GetUserRepos)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetUserRepos)
 	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
 	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
 
@@ -37,7 +37,7 @@ func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) ([
 		return []domain.Repository{}, err
 	}
 
-	req.Header.Add("Accept", c.configuration.Github.Headers.Accept)
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
 
 	var userRepos []domain.Repository
@@ -48,7 +48,7 @@ func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) ([
 
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
 func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Github.APIURL, c.configuration.Github.Endpoints.GetUserPullRequestsForRepo)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetUserPullRequestsForRepo)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 	URL = strings.Replace(URL, "{prState}", prState, -1)
@@ -63,7 +63,7 @@ func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, b
 		return []domain.PullRequest{}, err
 	}
 
-	req.Header.Add("Accept", c.configuration.Github.Headers.Accept)
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
 
 	var pullRequests []domain.PullRequest
@@ -74,7 +74,7 @@ func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, b
 
 // GetReviewStateOfPullRequest retrieves the reviews of a pull request.
 func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Github.APIURL, c.configuration.Github.Endpoints.GetReviewStatusOfPullRequest)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetReviewStatusOfPullRequest)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 	URL = strings.Replace(URL, "{pullRequestNumber}", strconv.Itoa(pullRequestNumber), -1)
@@ -84,7 +84,7 @@ func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository st
 		return []domain.PullRequestReview{}, err
 	}
 
-	req.Header.Add("Accept", c.configuration.Github.Headers.Accept)
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
 
 	var pullRequestReviews []domain.PullRequestReview
@@ -94,6 +94,10 @@ func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository st
 }
 
 func (c *Client) getResponse(req *http.Request, data interface{}) error {
+	// fmt.Println("==========================")
+	// fmt.Println(req)
+	// fmt.Println("==========================")
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err

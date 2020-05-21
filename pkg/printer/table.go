@@ -40,7 +40,6 @@ func (t *TablePrinter) PrintRepos(repos []domain.Repository) {
 	// 	Title:   table.TitleOptionsDefault,
 	// }
 	// outputTable.SetStyle(customStyle)
-
 	outputTable.Render()
 }
 

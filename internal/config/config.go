@@ -14,6 +14,10 @@ type application struct {
 	Version string `yaml:"version"`
 }
 
+type clients struct {
+	Github github `yaml:"github"`
+}
+
 type defaults struct {
 	AllowedPullRequestStates []string `yaml:"allowed_pull_request_states"`
 	BaseBranch               string   `yaml:"base_branch"`
@@ -21,14 +25,14 @@ type defaults struct {
 	PullRequestState         string   `yaml:"pull_request_state"`
 }
 
-type headers struct {
-	Accept string `yaml:"accept"`
-}
-
 type endpoints struct {
 	GetUserRepos                 string `yaml:"get_user_repos"`
 	GetUserPullRequestsForRepo   string `yaml:"get_user_pull_requests_for_repo"`
 	GetReviewStatusOfPullRequest string `yaml:"get_review_status_of_pull_request"`
+}
+
+type headers struct {
+	Accept string `yaml:"accept"`
 }
 
 type github struct {
@@ -44,6 +48,11 @@ type pagination struct {
 	Exit     string `yaml:"exit"`
 }
 
+type service struct {
+	Mode string `yaml:"mode"`
+	Port string `yaml:"port"`
+}
+
 type spinner struct {
 	HideCursor bool          `yaml:"hide_cursor"`
 	Type       int           `yaml:"type"`
@@ -54,8 +63,9 @@ type spinner struct {
 type Config struct {
 	Application application `yaml:"application"`
 	Defaults    defaults    `yaml:"defaults"`
-	Github      github      `yaml:"github"`
+	Clients     clients     `yaml:"clients"`
 	Pagination  pagination  `yaml:"pagination"`
+	Service     service     `yaml:"service"`
 	Spinner     spinner     `yaml:"spinner"`
 }
 
