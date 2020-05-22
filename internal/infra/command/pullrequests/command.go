@@ -48,14 +48,14 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				Usage:       "Owner of the repository to retrieve pull requests for.",
 				Value:       "",
 				Destination: &repoOwner,
-				Required:    false,
+				Required:    true,
 			},
 			cli.StringFlag{
 				Name:        "repository, r",
 				Usage:       "Repository name to check.",
 				Value:       "",
 				Destination: &repository,
-				Required:    false,
+				Required:    true,
 			},
 			cli.StringFlag{
 				Name:        "base, b",
