@@ -1,18 +1,10 @@
 version: "3.3"
 
-service:
-  mode: "{serviceMode}"
-  port: "{servicePort}"
 application:
   author: "Angelos Giannis"
   name: "GitPullRequests"
   usage: "CLI tool to check status of pull requests in github."
   version: "0.0.1"
-defaults:
-  allowed_pull_request_states: ["all", "open", "closed"]
-  base_branch: "develop"
-  page_size: 10
-  pull_request_state: "open"
 clients:
   github:
     api_url: "https://api.github.com"
@@ -26,6 +18,16 @@ pagination:
   next: "Next"
   previous: "Previous"
   exit: "Exit"
+service:
+  mode: "{serviceMode}"
+  port: "{servicePort}"
+settings:
+  allowed_pull_request_states: ["all", "open", "closed"]
+  available_clients: ["github"]
+  base_branch: "develop"
+  default: "github"
+  page_size: 10
+  pull_request_state: "open"
 spinner:
   hide_cursor: true
   type: 4

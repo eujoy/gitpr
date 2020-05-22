@@ -60,21 +60,21 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 			cli.StringFlag{
 				Name:        "base, b",
 				Usage:       "Base branch to check pull requests against.",
-				Value:       cfg.Defaults.BaseBranch,
+				Value:       cfg.Settings.BaseBranch,
 				Destination: &baseBranch,
 				Required:    false,
 			},
 			cli.StringFlag{
 				Name:        "state, a",
 				Usage:       "State of the pull request.",
-				Value:       cfg.Defaults.PullRequestState,
+				Value:       cfg.Settings.PullRequestState,
 				Destination: &prState,
 				Required:    false,
 			},
 			cli.IntFlag{
 				Name:        "page_size, s",
 				Usage:       "Size of each page to load.",
-				Value:       cfg.Defaults.PageSize,
+				Value:       cfg.Settings.PageSize,
 				Destination: &pageSize,
 				Required:    false,
 			},
@@ -127,11 +127,11 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 // validatePrStateAndGetDefault checks if the requested state of pull requests is valid and returns
 // it in case it is, otherwise it returns the default pull request state.
 func validatePrStateAndGetDefault(cfg config.Config, prState string) string {
-	for _, prs := range cfg.Defaults.AllowedPullRequestStates {
+	for _, prs := range cfg.Settings.AllowedPullRequestStates {
 		if prState == prs {
 			return prState
 		}
 	}
 
-	return cfg.Defaults.PullRequestState
+	return cfg.Settings.PullRequestState
 }

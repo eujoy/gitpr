@@ -3,11 +3,16 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
+)
+
+const (
+	returnContentType = "application/json"
 )
 
 // badRequestErrorMessage is used to prettify the bad request error message returned.
@@ -42,19 +47,19 @@ func NewHandler(cfg config.Config, userReposService userReposService, pullReques
 // GetDefaultSettings returns the default values for the service.
 func (h *Handler) GetDefaultSettings(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", returnContentType)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 
 		return
 	}
 
-	b, err := json.Marshal(h.cfg.Defaults)
+	b, err := json.Marshal(h.cfg.Settings)
 	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
 }
@@ -62,7 +67,7 @@ func (h *Handler) GetDefaultSettings(w http.ResponseWriter, req *http.Request) {
 // GetUserRepos retrieves and returns all the repositories of a user.
 func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", returnContentType)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 
 		return
@@ -70,16 +75,13 @@ func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 
 	var err error
 
-	authToken := ""
-	if _, ok := req.URL.Query()["authToken"]; ok {
-		authToken = req.URL.Query().Get("authToken")
-	} else {
-		err = errors.New("missing required field authToken")
+	authToken, err := parseRequiredStringFromRequestWithDefault(req, "authToken", "", true, false)
+	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
 
-	pageSize := h.cfg.Defaults.PageSize
+	pageSize := h.cfg.Settings.PageSize
 	if _, ok := req.URL.Query()["pageSize"]; ok {
 		pageSize, err = strconv.Atoi(req.URL.Query().Get("pageSize"))
 		if err != nil {
@@ -109,7 +111,7 @@ func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
 }
@@ -117,7 +119,7 @@ func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 // GetPullRequestsOfRepository retrieves and returns all the pull requests of a repository.
 func (h *Handler) GetPullRequestsOfRepository(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", returnContentType)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 
 		return
@@ -125,60 +127,47 @@ func (h *Handler) GetPullRequestsOfRepository(w http.ResponseWriter, req *http.R
 
 	var err error
 
-	authToken := ""
-	if _, ok := req.URL.Query()["authToken"]; ok {
-		authToken = req.URL.Query().Get("authToken")
-	} else {
-		err = errors.New("missing required field authToken")
+	authToken, err := parseRequiredStringFromRequestWithDefault(req, "authToken", "", true, false)
+	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
 
-	repoOwner := ""
-	if _, ok := req.URL.Query()["repoOwner"]; ok {
-		repoOwner = req.URL.Query().Get("repoOwner")
-	} else {
-		err = errors.New("missing required field repoOwner")
+	repoOwner, err := parseRequiredStringFromRequestWithDefault(req, "repoOwner", "", true, false)
+	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
 
-	repository := ""
-	if _, ok := req.URL.Query()["repository"]; ok {
-		repository = req.URL.Query().Get("repository")
-	} else {
-		err = errors.New("missing required field repository")
+	repository, err := parseRequiredStringFromRequestWithDefault(req, "repository", "", true, false)
+	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
 
-	baseBranch := h.cfg.Defaults.BaseBranch
-	if _, ok := req.URL.Query()["baseBranch"]; ok {
-		baseBranch = req.URL.Query().Get("baseBranch")
+	baseBranch, err := parseRequiredStringFromRequestWithDefault(req, "baseBranch", h.cfg.Settings.BaseBranch, false, true)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
 	}
 
-	prState := h.cfg.Defaults.PullRequestState
-	if _, ok := req.URL.Query()["prState"]; ok {
-		prState = req.URL.Query().Get("prState")
+	prState, err := parseRequiredStringFromRequestWithDefault(req, "prState", h.cfg.Settings.PullRequestState, false, true)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
 	}
 	prState = validatePrStateAndGetDefault(h.cfg, prState)
 
-	pageSize := h.cfg.Defaults.PageSize
-	if _, ok := req.URL.Query()["pageSize"]; ok {
-		pageSize, err = strconv.Atoi(req.URL.Query().Get("pageSize"))
-		if err != nil {
-			errBadRequest(w, err.Error())
-			return
-		}
+	pageSize, err := parseIntFieldsFromRequest(req, "pageSize", h.cfg.Settings.PageSize, false, true)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
 	}
 
-	currentPage := 1
-	if _, ok := req.URL.Query()["page"]; ok {
-		currentPage, err = strconv.Atoi(req.URL.Query().Get("page"))
-		if err != nil {
-			errBadRequest(w, err.Error())
-			return
-		}
+	currentPage, err := parseIntFieldsFromRequest(req, "page", 1, false, true)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
 	}
 
 	pullRequests, err := h.pullRequestsService.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
@@ -193,26 +182,66 @@ func (h *Handler) GetPullRequestsOfRepository(w http.ResponseWriter, req *http.R
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
+}
+
+// parseRequiredStringFromRequestWithDefault parses the request fields that are of string type and returns
+// the respective value provided.
+func parseRequiredStringFromRequestWithDefault(req *http.Request, urlParam, defaultValue string, isRequired, hasDefault bool) (requestValue string, err error) {
+	if hasDefault {
+		requestValue = defaultValue
+	}
+
+	if _, ok := req.URL.Query()[urlParam]; ok {
+		requestValue = req.URL.Query().Get(urlParam)
+	} else {
+		if isRequired {
+			err = errors.New(fmt.Sprintf("missing required field %v", urlParam))
+			return "", err
+		}
+	}
+
+	return requestValue, nil
+}
+
+// parseIntFieldsFromRequest parses and returns an integer field from the request.
+func parseIntFieldsFromRequest(req *http.Request, urlParam string, defaultValue int, isRequired, hasDefault bool) (requestValue int, err error) {
+	if hasDefault {
+		requestValue = defaultValue
+	}
+
+	if _, ok := req.URL.Query()[urlParam]; ok {
+		requestValue, err = strconv.Atoi(req.URL.Query().Get(urlParam))
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		if isRequired {
+			err := errors.New(fmt.Sprintf("missing required field %v", urlParam))
+			return 0, err
+		}
+	}
+
+	return requestValue, err
 }
 
 // validatePrStateAndGetDefault checks if the requested state of pull requests is valid and returns
 // it in case it is, otherwise it returns the default pull request state.
 func validatePrStateAndGetDefault(cfg config.Config, prState string) string {
-	for _, prs := range cfg.Defaults.AllowedPullRequestStates {
+	for _, prs := range cfg.Settings.AllowedPullRequestStates {
 		if prState == prs {
 			return prState
 		}
 	}
 
-	return cfg.Defaults.PullRequestState
+	return cfg.Settings.PullRequestState
 }
 
 // errBadRequest generates and error request with status "Bad Request" including the error message as well.
 func errBadRequest(w http.ResponseWriter, errMsg string) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusBadRequest)
 
 	badRequestError := badRequestErrorMessage{ErrorMessage: errMsg}
