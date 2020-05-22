@@ -83,7 +83,7 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 func startUpHttpServer(cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service) {
 	rh := internalHttp.NewHandler(cfg, urSrv, prSrv)
 
-	http.HandleFunc("/defaults", rh.GetDefaultSettings)
+	http.HandleFunc("/settings", rh.GetSettings)
 	http.HandleFunc("/userRepos", rh.GetUserRepos)
 	http.HandleFunc("/pullRequests", rh.GetPullRequestsOfRepository)
 
