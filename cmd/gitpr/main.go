@@ -5,15 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/Angelos-Giannis/gitpr/internal/app/infra/pullrequests"
 	"github.com/Angelos-Giannis/gitpr/internal/app/infra/userrepos"
 	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/infra/command"
 	internalHttp "github.com/Angelos-Giannis/gitpr/internal/infra/route/http"
-	"github.com/Angelos-Giannis/gitpr/pkg/github"
-	githttp "github.com/Angelos-Giannis/gitpr/pkg/github/http"
+	"github.com/Angelos-Giannis/gitpr/pkg/client"
 	"github.com/Angelos-Giannis/gitpr/pkg/printer"
 	"github.com/Angelos-Giannis/gitpr/pkg/utils"
 	"github.com/urfave/cli"
@@ -24,6 +22,7 @@ const (
 	configurationFile = "configuration.yaml"
 )
 
+// main sets up the dependencies as well as starts up the service itself.
 func main() {
 	cfg, err := config.New(configurationFile)
 	if err != nil {
@@ -34,11 +33,14 @@ func main() {
 	var app = cli.NewApp()
 	info(app, cfg)
 
-	gcl := githttp.NewClient(&http.Client{Timeout: cfg.Clients.Github.Timeout * time.Second}, cfg)
-	gr := github.NewResource(gcl)
+	gitRepoFactory, err := client.NewFactory(cfg.Clients.Default, cfg)
+	if err != nil {
+		fmt.Printf("Error setting up the service : %v\n", err)
+		os.Exit(1)
+	}
 
-	urSrv := userrepos.NewService(gr)
-	prSrv := pullrequests.NewService(gr)
+	urSrv := userrepos.NewService(gitRepoFactory.GetClient())
+	prSrv := pullrequests.NewService(gitRepoFactory.GetClient())
 
 	switch cfg.Service.Mode {
 	case "cli":
@@ -81,7 +83,7 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 func startUpHttpServer(cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service) {
 	rh := internalHttp.NewHandler(cfg, urSrv, prSrv)
 
-	http.HandleFunc("/defaults", rh.GetDefaultSettings)
+	http.HandleFunc("/settings", rh.GetSettings)
 	http.HandleFunc("/userRepos", rh.GetUserRepos)
 	http.HandleFunc("/pullRequests", rh.GetPullRequestsOfRepository)
 

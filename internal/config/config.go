@@ -15,14 +15,7 @@ type application struct {
 }
 
 type clients struct {
-	Github github `yaml:"github"`
-}
-
-type defaults struct {
-	AllowedPullRequestStates []string `yaml:"allowed_pull_request_states"`
-	BaseBranch               string   `yaml:"base_branch"`
-	PageSize                 int      `yaml:"page_size"`
-	PullRequestState         string   `yaml:"pull_request_state"`
+	Github           github   `yaml:"github"`
 }
 
 type endpoints struct {
@@ -53,6 +46,15 @@ type service struct {
 	Port string `yaml:"port"`
 }
 
+type settings struct {
+	AllowedPullRequestStates []string `yaml:"allowed_pull_request_states"`
+	AvailableClients         []string `yaml:"available_clients"`
+	BaseBranch               string   `yaml:"base_branch"`
+	DefaultClient            string   `yaml:"default_client"`
+	PageSize                 int      `yaml:"page_size"`
+	PullRequestState         string   `yaml:"pull_request_state"`
+}
+
 type spinner struct {
 	HideCursor bool          `yaml:"hide_cursor"`
 	Type       int           `yaml:"type"`
@@ -62,10 +64,10 @@ type spinner struct {
 // Config describes the configuration of the service.
 type Config struct {
 	Application application `yaml:"application"`
-	Defaults    defaults    `yaml:"defaults"`
 	Clients     clients     `yaml:"clients"`
 	Pagination  pagination  `yaml:"pagination"`
 	Service     service     `yaml:"service"`
+	Settings    settings    `yaml:"settings"`
 	Spinner     spinner     `yaml:"spinner"`
 }
 

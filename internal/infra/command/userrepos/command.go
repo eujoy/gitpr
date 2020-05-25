@@ -46,7 +46,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 			cli.IntFlag{
 				Name:        "page_size, s",
 				Usage:       "Size of each page to load.",
-				Value:       cfg.Defaults.PageSize,
+				Value:       cfg.Settings.PageSize,
 				Destination: &pageSize,
 				Required:    false,
 			},
