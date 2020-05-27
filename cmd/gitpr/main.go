@@ -17,8 +17,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// Define the app details as constants
 const (
+	// define the configuration file for the system.
 	configurationFile = "configuration.yaml"
 )
 
@@ -33,7 +33,7 @@ func main() {
 	var app = cli.NewApp()
 	info(app, cfg)
 
-	gitRepoFactory, err := client.NewFactory(cfg.Clients.Default, cfg)
+	gitRepoFactory, err := client.NewFactory(cfg.Settings.DefaultClient, cfg)
 	if err != nil {
 		fmt.Printf("Error setting up the service : %v\n", err)
 		os.Exit(1)
@@ -68,8 +68,9 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 	b := command.NewBuilder(cfg, urSrv, prSrv, tp, u)
 
 	app.Commands = b.
-		UserRepos().
+		Find().
 		PullRequests().
+		UserRepos().
 		GetCommands()
 
 	err := app.Run(os.Args)

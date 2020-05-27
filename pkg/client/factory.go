@@ -13,8 +13,8 @@ import (
 
 // Client describes the functions that muse be implemented by any client of the factory.
 type Client interface {
-	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
-	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 }
 

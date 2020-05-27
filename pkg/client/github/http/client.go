@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -26,28 +27,29 @@ func NewClient(httpClient *http.Client, configuration config.Config) *Client {
 	}
 }
 
-// GetUserRepos retrieves all the usekkr repositories from github.
-func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error) {
+// GetUserRepos retrieves all the user repositories from github.
+func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error) {
 	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetUserRepos)
 	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
 	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
 
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
-		return []domain.Repository{}, err
+		return domain.UserReposResponse{}, err
 	}
 
 	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
 
-	var userRepos []domain.Repository
-	err = c.getResponse(req, &userRepos)
+	var userReposResponse domain.UserReposResponse
+	err = c.getResponse(req, &userReposResponse.Repositories, &userReposResponse.Meta)
+	userReposResponse.Meta.PageSize = pageSize
 
-	return userRepos, err
+	return userReposResponse, err
 }
 
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
-func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error) {
+func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetUserPullRequestsForRepo)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
@@ -60,16 +62,17 @@ func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, b
 
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
-		return []domain.PullRequest{}, err
+		return domain.RepoPullRequestsResponse{}, err
 	}
 
 	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
 
-	var pullRequests []domain.PullRequest
-	err = c.getResponse(req, &pullRequests)
+	var pullRequestResponse domain.RepoPullRequestsResponse
+	err = c.getResponse(req, &pullRequestResponse.PullRequests, &pullRequestResponse.Meta)
+	pullRequestResponse.Meta.PageSize = pageSize
 
-	return pullRequests, err
+	return pullRequestResponse, err
 }
 
 // GetReviewStateOfPullRequest retrieves the reviews of a pull request.
@@ -88,12 +91,14 @@ func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository st
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
 
 	var pullRequestReviews []domain.PullRequestReview
-	err = c.getResponse(req, &pullRequestReviews)
+	err = c.getResponse(req, &pullRequestReviews, nil)
 
 	return pullRequestReviews, err
 }
 
-func (c *Client) getResponse(req *http.Request, data interface{}) error {
+// getResponse makes the actual request and converts the response to the respective required format.
+// Also, it parses the meta data in case it is required.
+func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.Meta) error {
 	// fmt.Println("==========================")
 	// fmt.Println(req)
 	// fmt.Println("==========================")
@@ -101,6 +106,13 @@ func (c *Client) getResponse(req *http.Request, data interface{}) error {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
+	}
+
+	if meta != nil {
+		err = parseMetaData(resp, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -116,6 +128,27 @@ func (c *Client) getResponse(req *http.Request, data interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// parseMetaData prepares the metadata for the response.
+func parseMetaData(response *http.Response, meta *domain.Meta) error {
+	lastPage := 1
+	regex := regexp.MustCompile(`page=([0-9]*)`)
+	for _, pageNum := range regex.FindAllString(response.Header.Get("Link"), -1) {
+		parts := strings.Split(pageNum, "=")
+
+		convertedInt, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return err
+		}
+		if convertedInt > lastPage {
+			lastPage = convertedInt
+		}
+	}
+
+	meta.LastPage = lastPage
 
 	return nil
 }

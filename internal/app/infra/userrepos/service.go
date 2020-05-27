@@ -5,7 +5,7 @@ import (
 )
 
 type resource interface{
-	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
+	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 
 // Service describes the user repositories service.
@@ -21,7 +21,7 @@ func NewService(resource resource) *Service {
 }
 
 // GetUserRepos retrieves all the user repositories from github.
-func (s *Service) GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error) {
+func (s *Service) GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error) {
 	userRepos, err := s.resource.GetUserRepos(authToken, pageSize, pageNumber)
 	return userRepos, err
 }

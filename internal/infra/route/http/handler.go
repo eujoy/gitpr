@@ -17,15 +17,15 @@ const (
 
 // badRequestErrorMessage is used to prettify the bad request error message returned.
 type badRequestErrorMessage struct {
-	ErrorMessage string `json:"error_message"`
+	ErrorMessage string `json:"error"`
 }
 
 type userReposService interface {
-	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
+	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 
 type pullRequestsService interface {
-	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
 // Handler describes the route handler.
@@ -46,6 +46,10 @@ func NewHandler(cfg config.Config, userReposService userReposService, pullReques
 
 // GetSettings returns the default values for the service.
 func (h *Handler) GetSettings(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	if req.Method != http.MethodGet {
 		w.Header().Set("Content-Type", returnContentType)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -66,6 +70,10 @@ func (h *Handler) GetSettings(w http.ResponseWriter, req *http.Request) {
 
 // GetUserRepos retrieves and returns all the repositories of a user.
 func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	if req.Method != http.MethodGet {
 		w.Header().Set("Content-Type", returnContentType)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -118,6 +126,10 @@ func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 
 // GetPullRequestsOfRepository retrieves and returns all the pull requests of a repository.
 func (h *Handler) GetPullRequestsOfRepository(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 	if req.Method != http.MethodGet {
 		w.Header().Set("Content-Type", returnContentType)
 		w.WriteHeader(http.StatusMethodNotAllowed)

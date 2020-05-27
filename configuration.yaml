@@ -25,10 +25,10 @@ settings:
   allowed_pull_request_states: ["all", "open", "closed"]
   available_clients: ["github"]
   base_branch: "develop"
-  default: "github"
+  default_client: "github"
   page_size: 10
   pull_request_state: "open"
 spinner:
   hide_cursor: true
-  type: 4
+  type: 35
   time: 200

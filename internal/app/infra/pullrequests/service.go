@@ -8,7 +8,7 @@ import (
 )
 
 type resource interface{
-	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 }
 
@@ -26,20 +26,20 @@ func NewService(resource resource) *Service {
 
 // @todo Improve performance of the flow.
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
-func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error) {
+func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	pullRequests, err := s.resource.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, pageNumber)
 	if err != nil {
 		fmt.Println(err)
-		return []domain.PullRequest{}, err
+		return domain.RepoPullRequestsResponse{}, err
 	}
 
-	for pr := range pullRequests {
-		reviewStates, err := s.resource.GetReviewStateOfPullRequest(authToken, repoOwner, repository, pullRequests[pr].Number)
+	for pr := range pullRequests.PullRequests {
+		reviewStates, err := s.resource.GetReviewStateOfPullRequest(authToken, repoOwner, repository, pullRequests.PullRequests[pr].Number)
 		if err != nil {
-			return []domain.PullRequest{}, err
+			return domain.RepoPullRequestsResponse{}, err
 		}
 
-		pullRequests[pr].ReviewStates = getLatestReviewStatus(pullRequests[pr].Reviewers, reviewStates)
+		pullRequests.PullRequests[pr].ReviewStates = getLatestReviewStatus(pullRequests.PullRequests[pr].Reviewers, reviewStates)
 	}
 
 	return pullRequests, nil

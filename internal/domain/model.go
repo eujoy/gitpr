@@ -4,19 +4,20 @@ import "time"
 
 // Repository describes the required details to keep for a repo.
 type Repository struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	HTMLURL  string `json:"html_url"`
-	SSHURL   string `json:"ssh_url"`
-	Private  bool   `json:"private"`
-	Language string `json:"language"`
-	Stars    int    `json:"stargazers_count"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	FullName    string `json:"full_name"`
+	Description string `json:"description"`
+	HTMLURL     string `json:"html_url"`
+	SSHURL      string `json:"ssh_url"`
+	Private     bool   `json:"private"`
+	Language    string `json:"language"`
+	Stars       int    `json:"stargazers_count"`
 }
 
 // User describes a user account.
 type User struct {
-	ID int `json:"id"`
+	ID       int    `json:"id"`
 	Username string `json:"login"`
 }
 
@@ -39,6 +40,7 @@ type PullRequest struct {
 	HTMLURL      string            `json:"html_url"`
 	Number       int               `json:"number"`
 	Title        string            `json:"title"`
+	Creator      User              `json:"user"`
 	Reviewers    []User            `json:"requested_reviewers"`
 	Labels       []Label           `json:"labels"`
 	State        string            `json:"state"`

@@ -5,8 +5,8 @@ import (
 )
 
 type githubClient interface {
-	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
-	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 }
 
@@ -23,13 +23,13 @@ func NewResource(githubClient githubClient) *Resource {
 }
 
 // GetUserRepos retrieves all the user repositories from github.
-func (r *Resource) GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error) {
+func (r *Resource) GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error) {
 	userRepos, err := r.githubClient.GetUserRepos(authToken, pageSize, pageNumber)
 	return userRepos, err
 }
 
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
-func (r *Resource) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error) {
+func (r *Resource) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	pullRequests, err := r.githubClient.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, pageNumber)
 	return pullRequests, err
 }

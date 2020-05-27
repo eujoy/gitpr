@@ -13,7 +13,7 @@ import (
 )
 
 type service interface{
-	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
 type tablePrinter interface{
@@ -91,17 +91,17 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				utilities.ClearTerminalScreen()
 				spinLoader.Start()
 
-				pullRequests, err := service.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
+				prResp, err := service.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
 
-				utilities.ClearTerminalScreen()
 				spinLoader.Stop()
+				utilities.ClearTerminalScreen()
 
-				tablePrinter.PrintPullRequest(pullRequests)
+				tablePrinter.PrintPullRequest(prResp.PullRequests)
 
 				var whatToDo string
 				prompt := &survey.Select{
 					Message: "Choose an option:",
-					Options: utilities.GetPageOptions(len(pullRequests), pageSize, currentPage),
+					Options: utilities.GetPageOptions(len(prResp.PullRequests), pageSize, currentPage),
 				}
 
 				err = survey.AskOne(prompt, &whatToDo)

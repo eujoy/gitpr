@@ -13,7 +13,7 @@ import (
 )
 
 type service interface{
-	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
+	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 
 type tablePrinter interface{
@@ -67,15 +67,15 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 					return
 				}
 
-				utilities.ClearTerminalScreen()
 				spinLoader.Stop()
+				utilities.ClearTerminalScreen()
 
-				tablePrinter.PrintRepos(userRepos)
+				tablePrinter.PrintRepos(userRepos.Repositories)
 
 				var whatToDo string
 				prompt := &survey.Select{
 					Message: "Choose an option:",
-					Options: utilities.GetPageOptions(len(userRepos), pageSize, currentPage),
+					Options: utilities.GetPageOptions(len(userRepos.Repositories), pageSize, currentPage),
 				}
 
 				err = survey.AskOne(prompt, &whatToDo)

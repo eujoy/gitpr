@@ -3,17 +3,18 @@ package command
 import (
 	"github.com/Angelos-Giannis/gitpr/internal/config"
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
+	"github.com/Angelos-Giannis/gitpr/internal/infra/command/find"
 	"github.com/Angelos-Giannis/gitpr/internal/infra/command/pullrequests"
 	"github.com/Angelos-Giannis/gitpr/internal/infra/command/userrepos"
 	"github.com/urfave/cli"
 )
 
 type userReposService interface {
-	GetUserRepos(authToken string, pageSize int, pageNumber int) ([]domain.Repository, error)
+	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 
 type pullRequestsService interface {
-	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) ([]domain.PullRequest, error)
+	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
 type tablePrinter interface{
@@ -66,6 +67,15 @@ func (b *Builder) UserRepos() *Builder {
 func (b *Builder) PullRequests() *Builder {
 	pullRequestsCmd := pullrequests.NewCmd(b.cfg, b.pullRequestsService, b.tablePrinter, b.utils)
 	b.commands = append(b.commands, pullRequestsCmd)
+
+	return b
+}
+
+// Find retrieves the repositories a user has access to and then allows the user to select multiple repos to retrieve
+// the pull requests that are open against the selected repositories.
+func (b *Builder) Find() *Builder {
+	findCmd := find.NewCmd(b.cfg, b.userReposService, b.pullRequestsService, b.tablePrinter, b.utils)
+	b.commands = append(b.commands, findCmd)
 
 	return b
 }
