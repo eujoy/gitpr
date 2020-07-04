@@ -1,4 +1,4 @@
-[![master-actions Actions Status](https://github.com/Angelos-Giannis/gitpr/workflows/push-to-master/badge.svg)](https://github.com/Angelos-Giannis/gitpr/actions)
+[![master-actions Actions Status](https://github.com/Angelos-Giannis/gitpr/workflows/master-actions/badge.svg)](https://github.com/Angelos-Giannis/gitpr/actions)
 
 # Definition
 
