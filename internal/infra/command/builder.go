@@ -17,12 +17,12 @@ type pullRequestsService interface {
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
-type tablePrinter interface{
+type tablePrinter interface {
 	PrintRepos(repos []domain.Repository)
 	PrintPullRequest(pullRequests []domain.PullRequest)
 }
 
-type utilities interface{
+type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
 	GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool)

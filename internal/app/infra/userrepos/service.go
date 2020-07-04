@@ -4,7 +4,7 @@ import (
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
 )
 
-type resource interface{
+type resource interface {
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 

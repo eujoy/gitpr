@@ -15,7 +15,7 @@ type application struct {
 }
 
 type clients struct {
-	Github           github   `yaml:"github"`
+	Github github `yaml:"github"`
 }
 
 type endpoints struct {

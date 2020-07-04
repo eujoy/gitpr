@@ -8,7 +8,7 @@ import (
 )
 
 // TablePrinter wraps the printout for models as table.
-type TablePrinter struct {}
+type TablePrinter struct{}
 
 // NewTablePrinter creates and returns a new table printer struct.
 func NewTablePrinter() *TablePrinter {
