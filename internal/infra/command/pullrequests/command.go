@@ -12,15 +12,15 @@ import (
 	"github.com/urfave/cli"
 )
 
-type service interface{
+type service interface {
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
-type tablePrinter interface{
+type tablePrinter interface {
 	PrintPullRequest(pullRequests []domain.PullRequest)
 }
 
-type utilities interface{
+type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
 	GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool)
@@ -29,12 +29,12 @@ type utilities interface{
 // NewCmd creates a new command to retrieve pull requests for a repo.
 func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
 	var authToken, repoOwner, repository, baseBranch, prState string
-	var pageSize  int
+	var pageSize int
 
 	pullRequestsCmd := cli.Command{
-		Name: "pull-requests",
+		Name:    "pull-requests",
 		Aliases: []string{"p"},
-		Usage: "Retrieves and prints all the pull requests of a user for a repository.",
+		Usage:   "Retrieves and prints all the pull requests of a user for a repository.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "auth_token, t",
@@ -80,10 +80,10 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 			},
 		},
 		Action: func(c *cli.Context) {
-			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time * time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
+			var shallContinue bool
+			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
 			currentPage := 1
-			shallContinue := true
 
 			prState = validatePrStateAndGetDefault(cfg, prState)
 
@@ -92,6 +92,10 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				spinLoader.Start()
 
 				prResp, err := service.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 
 				spinLoader.Stop()
 				utilities.ClearTerminalScreen()

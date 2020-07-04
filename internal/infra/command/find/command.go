@@ -13,22 +13,23 @@ import (
 	"github.com/urfave/cli"
 )
 
-type userReposService interface{
+type userReposService interface {
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 
-type pullRequestsService interface{
+type pullRequestsService interface {
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
-type tablePrinter interface{
+type tablePrinter interface {
 	PrintPullRequest(pullRequests []domain.PullRequest)
 }
 
-type utilities interface{
+type utilities interface {
 	ClearTerminalScreen()
 }
 
+// NewCmd creates a new command to prompt several questions to user to retrieve pull requests..
 func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utilities utilities) cli.Command {
 	var authToken string
 	// var pageSize  int
@@ -37,7 +38,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 		Name:    "find",
 		Aliases: []string{"f"},
 		Usage:   "Find the pull requests of multiple user repositories.",
-		Flags:   []cli.Flag{
+		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "auth_token, t",
 				Usage:       "Github authorization token.",
@@ -50,8 +51,8 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 			// @todo Add a flag to allow providing a comma separated list of pull request reviewer(s) - by survey.Input or by cli.Flag.
 			//
 		},
-		Action:  func(c *cli.Context) {
-			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time * time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
+		Action: func(c *cli.Context) {
+			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
 			utilities.ClearTerminalScreen()
 			spinLoader.Start()
@@ -62,9 +63,9 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 			utilities.ClearTerminalScreen()
 
 			userReposPrompt := &survey.MultiSelect{
-				Message:       "Select the repos to retrieve the pull request of:",
-				Options:       userRepositories,
-				PageSize:      20,
+				Message:  "Select the repos to retrieve the pull request of:",
+				Options:  userRepositories,
+				PageSize: 20,
 			}
 
 			var selectedRepos []string

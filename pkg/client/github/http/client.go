@@ -55,7 +55,7 @@ func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, b
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 	URL = strings.Replace(URL, "{prState}", prState, -1)
 	if baseBranch != "" {
-		URL = strings.Replace(URL, "{baseBranch}", "base=" + baseBranch, -1)
+		URL = strings.Replace(URL, "{baseBranch}", "base="+baseBranch, -1)
 	}
 	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
 	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
@@ -135,7 +135,7 @@ func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.M
 // parseMetaData prepares the metadata for the response.
 func parseMetaData(response *http.Response, meta *domain.Meta) error {
 	lastPage := 1
-	regex := regexp.MustCompile(`page=([0-9]*)`)
+	regex := regexp.MustCompile(`&page=([0-9]*)`)
 	for _, pageNum := range regex.FindAllString(response.Header.Get("Link"), -1) {
 		parts := strings.Split(pageNum, "=")
 

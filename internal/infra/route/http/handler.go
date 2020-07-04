@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -65,7 +64,7 @@ func (h *Handler) GetSettings(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusOK)
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 // GetUserRepos retrieves and returns all the repositories of a user.
@@ -121,7 +120,7 @@ func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusOK)
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 // GetPullRequestsOfRepository retrieves and returns all the pull requests of a repository.
@@ -196,7 +195,7 @@ func (h *Handler) GetPullRequestsOfRepository(w http.ResponseWriter, req *http.R
 
 	w.Header().Set("Content-Type", returnContentType)
 	w.WriteHeader(http.StatusOK)
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 // parseRequiredStringFromRequestWithDefault parses the request fields that are of string type and returns
@@ -210,7 +209,7 @@ func parseRequiredStringFromRequestWithDefault(req *http.Request, urlParam, defa
 		requestValue = req.URL.Query().Get(urlParam)
 	} else {
 		if isRequired {
-			err = errors.New(fmt.Sprintf("missing required field %v", urlParam))
+			err = fmt.Errorf("missing required field %v", urlParam)
 			return "", err
 		}
 	}
@@ -231,7 +230,7 @@ func parseIntFieldsFromRequest(req *http.Request, urlParam string, defaultValue 
 		}
 	} else {
 		if isRequired {
-			err := errors.New(fmt.Sprintf("missing required field %v", urlParam))
+			err := fmt.Errorf("missing required field %v", urlParam)
 			return 0, err
 		}
 	}
@@ -262,5 +261,5 @@ func errBadRequest(w http.ResponseWriter, errMsg string) {
 		return
 	}
 
-	w.Write(b)
+	_, _ = w.Write(b)
 }

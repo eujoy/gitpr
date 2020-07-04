@@ -7,7 +7,7 @@ import (
 	"github.com/Angelos-Giannis/gitpr/internal/domain"
 )
 
-type resource interface{
+type resource interface {
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 }
@@ -24,8 +24,8 @@ func NewService(resource resource) *Service {
 	}
 }
 
-// @todo Improve performance of the flow.
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
+// @todo Improve performance of the flow.
 func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	pullRequests, err := s.resource.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, pageNumber)
 	if err != nil {
@@ -44,7 +44,6 @@ func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, 
 
 	return pullRequests, nil
 }
-
 
 // getLatestReviewStatus retrieve the latest pull request reviews state.
 func getLatestReviewStatus(prReviewers []domain.User, reviews []domain.PullRequestReview) map[string]string {

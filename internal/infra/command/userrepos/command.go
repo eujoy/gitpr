@@ -12,15 +12,15 @@ import (
 	"github.com/urfave/cli"
 )
 
-type service interface{
+type service interface {
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 }
 
-type tablePrinter interface{
+type tablePrinter interface {
 	PrintRepos(repos []domain.Repository)
 }
 
-type utilities interface{
+type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
 	GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool)
@@ -29,12 +29,12 @@ type utilities interface{
 // NewCmd creates a new command to retrieve the repos of a user.
 func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
 	var authToken string
-	var pageSize  int
+	var pageSize int
 
 	userReposCmd := cli.Command{
-		Name: "user-repos",
+		Name:    "user-repos",
 		Aliases: []string{"u"},
-		Usage: "Retrieves and prints the repos of an authenticated user.",
+		Usage:   "Retrieves and prints the repos of an authenticated user.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "auth_token, t",
@@ -52,10 +52,10 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 			},
 		},
 		Action: func(c *cli.Context) {
-			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time * time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
+			var shallContinue bool
+			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
 			currentPage := 1
-			shallContinue := true
 
 			for {
 				utilities.ClearTerminalScreen()

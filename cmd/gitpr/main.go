@@ -46,7 +46,7 @@ func main() {
 	case "cli":
 		startUpCliService(app, cfg, urSrv, prSrv)
 	case "http":
-		startUpHttpServer(cfg, urSrv, prSrv)
+		startUpHTTPServer(cfg, urSrv, prSrv)
 	default:
 		startUpCliService(app, cfg, urSrv, prSrv)
 	}
@@ -81,7 +81,7 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 }
 
 // startUpHttpServer runs the service in http rest mode.
-func startUpHttpServer(cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service) {
+func startUpHTTPServer(cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service) {
 	rh := internalHttp.NewHandler(cfg, urSrv, prSrv)
 
 	http.HandleFunc("/settings", rh.GetSettings)
