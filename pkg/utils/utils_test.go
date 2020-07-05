@@ -18,7 +18,52 @@ func TestNew(t *testing.T) {
 	}
 }
 
-// @todo Add test for GetPageOptions
+func TestGetPageOptions(t *testing.T) {
+	var cfg config.Config
+	cfg.Pagination.Next = "Next"
+	cfg.Pagination.Previous = "Previous"
+	cfg.Pagination.Exit = "Exit"
+
+	utils := utils.New(cfg)
+
+	type input struct {
+		respLength  int
+		pageSize    int
+		currentPage int
+	}
+
+	type expected struct {
+		pageOptions []string
+	}
+
+	testCases := map[string]struct {
+		input    input
+		expected expected
+	}{
+		"Normal execution being on the first page": {
+			input{5, 5, 0},
+			expected{[]string{"Next", "Exit"}},
+		},
+		"Normal execution being on the last page": {
+			input{4, 5, 2},
+			expected{[]string{"Previous", "Exit"}},
+		},
+		"Normal execution being on a mid page": {
+			input{3, 3, 2},
+			expected{[]string{"Next", "Previous", "Exit"}},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			actualPageOptions := utils.GetPageOptions(tc.input.respLength, tc.input.pageSize, tc.input.currentPage)
+
+			if !reflect.DeepEqual(tc.expected.pageOptions, actualPageOptions) {
+				t.Errorf("Expected to get '%v' as page options, but got '%v'", tc.expected.pageOptions, actualPageOptions)
+			}
+		})
+	}
+}
 
 func TestGetNextPageNumberOrExit(t *testing.T) {
 	var cfg config.Config
