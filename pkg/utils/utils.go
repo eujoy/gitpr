@@ -13,8 +13,8 @@ type Utils struct {
 	cfg config.Config
 }
 
-// NewUtils create and return a new utilities struct.
-func NewUtils(cfg config.Config) *Utils {
+// New create and return a new utilities struct.
+func New(cfg config.Config) *Utils {
 	return &Utils{
 		cfg: cfg,
 	}
