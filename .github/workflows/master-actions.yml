@@ -19,3 +19,6 @@ jobs:
       
       - name: Run Tests
         run: go test ./... -v -p=1 -count=1 -cover
+
+      - name: Get help of cli tool
+        run: go run ./cmd/gitpr/main.go --help
