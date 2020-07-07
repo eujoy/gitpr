@@ -6,6 +6,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/find"
 	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
+	"github.com/eujoy/gitpr/internal/infra/command/widget"
 	"github.com/urfave/cli"
 )
 
@@ -76,6 +77,14 @@ func (b *Builder) PullRequests() *Builder {
 func (b *Builder) Find() *Builder {
 	findCmd := find.NewCmd(b.cfg, b.userReposService, b.pullRequestsService, b.tablePrinter, b.utils)
 	b.commands = append(b.commands, findCmd)
+
+	return b
+}
+
+// Widget is used to display all the details in widgets in terminal.
+func (b *Builder) Widget() *Builder {
+	widgetCmd := widget.NewCmd(b.cfg, b.userReposService, b.pullRequestsService)
+	b.commands = append(b.commands, widgetCmd)
 
 	return b
 }
