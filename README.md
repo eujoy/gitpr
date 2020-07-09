@@ -1,3 +1,4 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![master-actions Actions Status](https://github.com/Angelos-Giannis/gitpr/workflows/master-actions/badge.svg)](https://github.com/Angelos-Giannis/gitpr/actions)
 
 # Definition
