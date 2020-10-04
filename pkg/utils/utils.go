@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Angelos-Giannis/gitpr/internal/config"
+	"github.com/eujoy/gitpr/internal/config"
 )
 
 // Utils describes the common utilities package.

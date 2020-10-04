@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
 	"github.com/briandowns/spinner"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/urfave/cli"
 )
 

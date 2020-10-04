@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/pkg/client"
-	"github.com/Angelos-Giannis/gitpr/pkg/client/github"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/pkg/client"
+	"github.com/eujoy/gitpr/pkg/client/github"
 )
 
 func TestNewFactory(t *testing.T) {

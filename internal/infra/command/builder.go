@@ -1,11 +1,11 @@
 package command
 
 import (
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
-	"github.com/Angelos-Giannis/gitpr/internal/infra/command/find"
-	"github.com/Angelos-Giannis/gitpr/internal/infra/command/pullrequests"
-	"github.com/Angelos-Giannis/gitpr/internal/infra/command/userrepos"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/command/find"
+	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
+	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/urfave/cli"
 )
 

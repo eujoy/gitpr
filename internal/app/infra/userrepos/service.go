@@ -1,7 +1,7 @@
 package userrepos
 
 import (
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/domain"
 )
 
 type resource interface {

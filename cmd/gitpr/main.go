@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Angelos-Giannis/gitpr/internal/app/infra/pullrequests"
-	"github.com/Angelos-Giannis/gitpr/internal/app/infra/userrepos"
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/internal/infra/command"
-	internalHttp "github.com/Angelos-Giannis/gitpr/internal/infra/route/http"
-	"github.com/Angelos-Giannis/gitpr/pkg/client"
-	"github.com/Angelos-Giannis/gitpr/pkg/printer"
-	"github.com/Angelos-Giannis/gitpr/pkg/utils"
+	"github.com/eujoy/gitpr/internal/app/infra/pullrequests"
+	"github.com/eujoy/gitpr/internal/app/infra/userrepos"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/internal/infra/command"
+	internalHttp "github.com/eujoy/gitpr/internal/infra/route/http"
+	"github.com/eujoy/gitpr/pkg/client"
+	"github.com/eujoy/gitpr/pkg/printer"
+	"github.com/eujoy/gitpr/pkg/utils"
 	"github.com/urfave/cli"
 )
 

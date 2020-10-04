@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/pkg/utils"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/pkg/utils"
 )
 
 func TestNew(t *testing.T) {

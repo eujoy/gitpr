@@ -94,6 +94,9 @@ type Table struct {
 	sortBy []SortBy
 	// style contains all the strings used to draw the table, and more
 	style *Style
+	// suppressEmptyColumns hides columns which have no content on all regular
+	// rows
+	suppressEmptyColumns bool
 	// title contains the text to appear above the table
 	title string
 }
@@ -218,6 +221,8 @@ func (t *Table) SetColumnConfigs(configs []ColumnConfig) {
 
 // SetHTMLCSSClass sets the the HTML CSS Class to use on the <table> node
 // when rendering the Table in HTML format.
+//
+// Deprecated: in favor of Style().HTML.CSSClass
 func (t *Table) SetHTMLCSSClass(cssClass string) {
 	t.htmlCSSClass = cssClass
 }
@@ -274,6 +279,12 @@ func (t *Table) Style() *Style {
 		t.style = &tempStyle
 	}
 	return t.style
+}
+
+// SuppressEmptyColumns hides columns when the column is empty in ALL the
+// regular rows.
+func (t *Table) SuppressEmptyColumns() {
+	t.suppressEmptyColumns = true
 }
 
 func (t *Table) analyzeAndStringify(row Row, hint renderHint) rowStr {
@@ -697,6 +708,9 @@ func (t *Table) initForRenderRows() {
 	// sort the rows as requested
 	t.initForRenderSortRows()
 
+	// suppress columns without any content
+	t.initForRenderSuppressColumns()
+
 	// strip out hidden columns
 	t.initForRenderHideColumns()
 }
@@ -756,6 +770,27 @@ func (t *Table) initForRenderSortRows() {
 			sortedRowsColors[idx] = t.rowsColors[sortedRowIndices[idx]]
 		}
 		t.rowsColors = sortedRowsColors
+	}
+}
+
+func (t *Table) initForRenderSuppressColumns() {
+	shouldSuppressColumn := func(colIdx int) bool {
+		for _, row := range t.rows {
+			if colIdx < len(row) && row[colIdx] != "" {
+				return false
+			}
+		}
+		return true
+	}
+
+	if t.suppressEmptyColumns {
+		for colIdx := 0; colIdx < t.numColumns; colIdx++ {
+			if shouldSuppressColumn(colIdx) {
+				cc := t.columnConfigMap[colIdx]
+				cc.Hidden = true
+				t.columnConfigMap[colIdx] = cc
+			}
+		}
 	}
 }
 

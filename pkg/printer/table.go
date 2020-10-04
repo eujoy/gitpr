@@ -3,7 +3,7 @@ package printer
 import (
 	"os"
 
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 

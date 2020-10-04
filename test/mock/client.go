@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/stretchr/testify/mock"
 )
 

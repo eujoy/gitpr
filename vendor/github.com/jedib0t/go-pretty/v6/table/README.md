@@ -20,6 +20,7 @@ Pretty-print tables into ASCII/Unicode strings.
     - Custom (vertical) VAlign per column with multi-line cell support (`ColumnConfig.VAlign*`)
   - Mirror output to an `io.Writer` (ex. `os.StdOut`) (`SetOutputMirror`)
   - Sort by one or more Columns (`SortBy`)
+  - Suppress/hide columns with no content (`SuppressEmptyColumns`) 
   - Customizable Cell rendering per Column (`ColumnConfig.Transformer*`)
   - Hide any columns that you don't want displayed (`ColumnConfig.Hidden`)
   - Reset Headers/Rows/Footers at will to reuse the same Table Writer (`Reset*`)
@@ -362,11 +363,17 @@ to get:
 ### ... HTML Table
 
 ```golang
+    t.Style().HTML = table.HTMLOptions{
+        CSSClass:    "game-of-thrones",
+        EmptyColumn: "&nbsp;",
+        EscapeText:  true,
+        Newline:     "<br/>",
+    }
     t.RenderHTML()
 ```
 to get:
 ```html
-<table class="go-pretty-table">
+<table class="game-of-thrones">
   <thead>
   <tr>
     <th align="right">#</th>

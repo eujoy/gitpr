@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
-	"github.com/Angelos-Giannis/gitpr/pkg/client/github"
-	githubhttp "github.com/Angelos-Giannis/gitpr/pkg/client/github/http"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/pkg/client/github"
+	githubhttp "github.com/eujoy/gitpr/pkg/client/github/http"
 )
 
 // Client describes the functions that muse be implemented by any client of the factory.
