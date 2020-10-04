@@ -21,7 +21,7 @@ type pullRequestService interface {
 
 // NewCmd creates a new command to display the details retrieved as widgets in terminal.
 func NewCmd(cfg config.Config, userReposService userReposService, pullRequestService pullRequestService) cli.Command {
-	var authToken string
+	authToken := cfg.Clients.Github.Token.DefaultValue
 
 	widgetCmd := cli.Command{
 		Name:    "widget",
@@ -33,7 +33,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 				Usage:       "Github authorization token.",
 				Value:       "",
 				Destination: &authToken,
-				Required:    true,
+				Required:    false,
 			},
 		},
 		Action: func(c *cli.Context) {
