@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Angelos-Giannis/gitpr/internal/config"
-	"github.com/Angelos-Giannis/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/config"
+	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"github.com/urfave/cli"
