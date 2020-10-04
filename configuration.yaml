@@ -8,6 +8,9 @@ application:
 clients:
   github:
     api_url: "https://api.github.com"
+    token:
+      default_env_var: "GITPR_GITHUB_AUTH_TOKEN"
+      default_value: ""
     endpoints:
       get_review_status_of_pull_request: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/reviews"
       get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"

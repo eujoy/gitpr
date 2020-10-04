@@ -82,7 +82,7 @@ func (h *Handler) GetUserRepos(w http.ResponseWriter, req *http.Request) {
 
 	var err error
 
-	authToken, err := parseRequiredStringFromRequestWithDefault(req, "authToken", "", true, false)
+	authToken, err := parseRequiredStringFromRequestWithDefault(req, "authToken", h.cfg.Clients.Github.Token.DefaultValue, true, true)
 	if err != nil {
 		errBadRequest(w, err.Error())
 		return
@@ -138,7 +138,7 @@ func (h *Handler) GetPullRequestsOfRepository(w http.ResponseWriter, req *http.R
 
 	var err error
 
-	authToken, err := parseRequiredStringFromRequestWithDefault(req, "authToken", "", true, false)
+	authToken, err := parseRequiredStringFromRequestWithDefault(req, "authToken", h.cfg.Clients.Github.Token.DefaultValue, true, true)
 	if err != nil {
 		errBadRequest(w, err.Error())
 		return
@@ -208,7 +208,7 @@ func parseRequiredStringFromRequestWithDefault(req *http.Request, urlParam, defa
 	if _, ok := req.URL.Query()[urlParam]; ok {
 		requestValue = req.URL.Query().Get(urlParam)
 	} else {
-		if isRequired {
+		if isRequired && requestValue == "" {
 			err = fmt.Errorf("missing required field %v", urlParam)
 			return "", err
 		}

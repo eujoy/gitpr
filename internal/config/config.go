@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"os"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -28,11 +29,17 @@ type headers struct {
 	Accept string `yaml:"accept"`
 }
 
+type token struct {
+	DefaultEnvVar string `yaml:"default_env_var"`
+	DefaultValue  string `yaml:"default_value"`
+}
+
 type github struct {
 	APIURL    string        `yaml:"api_url"`
 	Headers   headers       `yaml:"headers"`
 	Endpoints endpoints     `yaml:"endpoints"`
 	Timeout   time.Duration `yaml:"timeout"`
+	Token     token         `yaml:"token"`
 }
 
 type pagination struct {
@@ -83,6 +90,10 @@ func New(configFile string) (Config, error) {
 	err = yaml.Unmarshal(yamlBytes, &config)
 	if err != nil {
 		return Config{}, err
+	}
+
+	if config.Clients.Github.Token.DefaultValue == "" {
+		config.Clients.Github.Token.DefaultValue = os.Getenv(config.Clients.Github.Token.DefaultEnvVar)
 	}
 
 	return config, err

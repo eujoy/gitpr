@@ -28,7 +28,7 @@ type utilities interface {
 
 // NewCmd creates a new command to retrieve the repos of a user.
 func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
-	var authToken string
+	authToken := cfg.Clients.Github.Token.DefaultValue
 	var pageSize int
 
 	userReposCmd := cli.Command{
@@ -41,7 +41,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				Usage:       "Github authorization token.",
 				Value:       "",
 				Destination: &authToken,
-				Required:    true,
+				Required:    false,
 			},
 			cli.IntFlag{
 				Name:        "page_size, s",

@@ -31,7 +31,7 @@ type utilities interface {
 
 // NewCmd creates a new command to prompt several questions to user to retrieve pull requests..
 func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utilities utilities) cli.Command {
-	var authToken string
+	authToken := cfg.Clients.Github.Token.DefaultValue
 	// var pageSize  int
 
 	findCmd := cli.Command{
@@ -44,7 +44,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 				Usage:       "Github authorization token.",
 				Value:       "",
 				Destination: &authToken,
-				Required:    true,
+				Required:    false,
 			},
 			//
 			// @todo Add a flag to allow providing a comma separated list of pull request creator(s)  - by survey.Input or by cli.Flag.
