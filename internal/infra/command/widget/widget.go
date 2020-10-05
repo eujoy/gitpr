@@ -40,13 +40,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 			app := tview.NewApplication()
 
 			selectedPrState := cfg.Settings.PullRequestState
-			baseBranch := "master"
-
-			// newPrimitive := func(text string) tview.Primitive {
-			// 	return tview.NewTextView().
-			// 		SetTextAlign(tview.AlignCenter).
-			// 		SetText(text)
-			// }
+			baseBranch := cfg.Settings.BaseBranch
 
 			defaultPrStateIndex := 0
 			for idx, s := range cfg.Settings.AllowedPullRequestStates {
@@ -105,29 +99,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 						pullRequestsList.AddItem("No pull requests found!", "", '-', nil)
 					} else {
 						for _, pr := range prList {
-							approved, pending, requestedChanges, total := 0, 0, 0, 0
-							for key := range pr.ReviewStates {
-								total++
-								if pr.ReviewStates[key] == "APPROVED" {
-									approved++
-								}
-								if pr.ReviewStates[key] == "PENDING" {
-									pending++
-								}
-								if pr.ReviewStates[key] != "APPROVED" && pr.ReviewStates[key] != "PENDING" {
-									requestedChanges++
-								}
-							}
-
-							primaryText := fmt.Sprintf("%v - by %v", pr.Title, pr.Creator.Username)
-							secondaryText := fmt.Sprintf("%v | Status: %v | [APPROVED: %v - PENDING: %v - REQUEST CHANGES: %v - TOTAL: %v]",
-								pr.HTMLURL,
-								pr.State,
-								approved,
-								pending,
-								requestedChanges,
-								total,
-							)
+							primaryText, secondaryText := getPrimaryAndSecondaryTextForPullRequest(pr)
 
 							pullRequestsList.AddItem(
 								fmt.Sprintf(primaryText),
@@ -187,8 +159,6 @@ func getAllPullRequestsForRepo(pullRequestService pullRequestService, authToken,
 	var pullRequestsOfRepository []domain.PullRequest
 	currentPage := 1
 
-	// fmt.Println(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
-
 	for {
 		pullRequests, err := pullRequestService.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
 		if err != nil {
@@ -207,4 +177,33 @@ func getAllPullRequestsForRepo(pullRequestService pullRequestService, authToken,
 	}
 
 	return pullRequestsOfRepository
+}
+
+// getPrimaryAndSecondaryTextForPullRequest prepares and returns the pull request details text to be displayed.
+func getPrimaryAndSecondaryTextForPullRequest(pullRequest domain.PullRequest) (string, string) {
+	approved, pending, requestedChanges, total := 0, 0, 0, 0
+	for key := range pullRequest.ReviewStates {
+		total++
+		switch pullRequest.ReviewStates[key] {
+		case "APPROVED":
+			approved++
+		case "PENDING":
+			pending++
+		default:
+			requestedChanges++
+		}
+	}
+
+	primaryText := fmt.Sprintf("%v - by '%v'", pullRequest.Title, pullRequest.Creator.Username)
+	secondaryText := fmt.Sprintf(
+		"%v | Status: %v | [APPROVED: %v - PENDING: %v - REQUEST CHANGES: %v - TOTAL: %v]",
+		pullRequest.HTMLURL,
+		pullRequest.State,
+		approved,
+		pending,
+		requestedChanges,
+		total,
+	)
+
+	return primaryText, secondaryText
 }
