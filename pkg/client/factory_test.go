@@ -27,7 +27,7 @@ func TestNewFactory(t *testing.T) {
 		}
 	})
 
-	t.Run("Try to instatiate a client using invalid client type - expecting an error", func(t *testing.T) {
+	t.Run("Try to instantiate a client using invalid client type - expecting an error", func(t *testing.T) {
 		expectedError := errors.New("failed to initialize client")
 		actualFactory, actualError := client.NewFactory("invalid client", cfg)
 
@@ -39,7 +39,7 @@ func TestNewFactory(t *testing.T) {
 		}
 	})
 
-	t.Run("Try to instatiate a client using an empty client type - expecting an error", func(t *testing.T) {
+	t.Run("Try to instantiate a client using an empty client type - expecting an error", func(t *testing.T) {
 		expectedError := errors.New("failed to initialize client")
 		actualFactory, actualError := client.NewFactory("invalid client", cfg)
 
