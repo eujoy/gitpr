@@ -71,6 +71,7 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 		Find().
 		PullRequests().
 		UserRepos().
+		Widget().
 		GetCommands()
 
 	err := app.Run(os.Args)

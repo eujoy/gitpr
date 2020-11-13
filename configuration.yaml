@@ -27,7 +27,7 @@ service:
 settings:
   allowed_pull_request_states: ["all", "open", "closed"]
   available_clients: ["github"]
-  base_branch: "develop"
+  base_branch: "master"
   default_client: "github"
   page_size: 10
   pull_request_state: "open"

@@ -1,0 +1,24 @@
+name: master-actions
+on: [pull_request]
+
+jobs:
+  linting-and-test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: GolangCI Lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.26
+          working-directory: .
+
+      - name: Run Tests
+        run: |
+          go get github.com/kyoh86/richgo
+          RICHGO_FORCE_COLOR=1 richgo test ./... -v -p=1 -count=1 -cover
+
+      - name: Get help of cli tool
+        run: go run ./cmd/gitpr/main.go --help

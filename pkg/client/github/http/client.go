@@ -99,10 +99,6 @@ func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository st
 // getResponse makes the actual request and converts the response to the respective required format.
 // Also, it parses the meta data in case it is required.
 func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.Meta) error {
-	// fmt.Println("==========================")
-	// fmt.Println(req)
-	// fmt.Println("==========================")
-
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
@@ -119,10 +115,6 @@ func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.M
 	if err != nil {
 		return err
 	}
-
-	// fmt.Println("==========================")
-	// fmt.Println(string(body))
-	// fmt.Println("==========================")
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {

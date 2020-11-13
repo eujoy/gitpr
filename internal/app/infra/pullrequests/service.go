@@ -1,7 +1,6 @@
 package pullrequests
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/eujoy/gitpr/internal/domain"
@@ -29,7 +28,7 @@ func NewService(resource resource) *Service {
 func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	pullRequests, err := s.resource.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, pageNumber)
 	if err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		return domain.RepoPullRequestsResponse{}, err
 	}
 

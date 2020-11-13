@@ -31,7 +31,7 @@ type utilities interface {
 
 // NewCmd creates a new command to prompt several questions to user to retrieve pull requests..
 func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utilities utilities) cli.Command {
-	authToken := cfg.Clients.Github.Token.DefaultValue
+	var authToken string
 	// var pageSize  int
 
 	findCmd := cli.Command{
@@ -42,7 +42,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 			cli.StringFlag{
 				Name:        "auth_token, t",
 				Usage:       "Github authorization token.",
-				Value:       "",
+				Value:       cfg.Clients.Github.Token.DefaultValue,
 				Destination: &authToken,
 				Required:    false,
 			},
