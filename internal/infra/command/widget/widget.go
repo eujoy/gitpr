@@ -59,15 +59,12 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 				SetLabelColor(tcell.ColorLightGoldenrodYellow).
 				AddDropDown("PR Status", cfg.Settings.AllowedPullRequestStates, defaultPrStateIndex, func(option string, optionIndex int) {
 					selectedPrState = option
-					return
 				}).
 				AddInputField("Base Branch", baseBranch, 40, nil, func(text string) {
 					baseBranch = text
-					return
 				}).
 				AddPasswordField("Auth Token", authToken, 50, '*', func(text string) {
 					authToken = text
-					return
 				})
 			headerForm.SetBorder(true).SetTitle("Change the filters (navigate using tab button)").SetTitleAlign(tview.AlignCenter)
 
@@ -102,7 +99,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 							primaryText, secondaryText := getPrimaryAndSecondaryTextForPullRequest(pr)
 
 							pullRequestsList.AddItem(
-								fmt.Sprintf(primaryText),
+								primaryText,
 								secondaryText,
 								'-',
 								nil,
@@ -140,9 +137,7 @@ func getAllUserRepoNames(userReposService userReposService, authToken string, pa
 			return []domain.Repository{}
 		}
 
-		for _, r := range userRepos.Repositories {
-			userRepositories = append(userRepositories, r)
-		}
+		userRepositories = append(userRepositories, userRepos.Repositories...)
 
 		if len(userRepos.Repositories) < pageSize {
 			break
@@ -165,9 +160,7 @@ func getAllPullRequestsForRepo(pullRequestService pullRequestService, authToken,
 			return []domain.PullRequest{}
 		}
 
-		for _, pr := range pullRequests.PullRequests {
-			pullRequestsOfRepository = append(pullRequestsOfRepository, pr)
-		}
+		pullRequestsOfRepository = append(pullRequestsOfRepository, pullRequests.PullRequests...)
 
 		if len(pullRequests.PullRequests) < pageSize {
 			break
