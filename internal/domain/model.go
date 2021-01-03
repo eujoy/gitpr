@@ -47,3 +47,25 @@ type PullRequest struct {
 	ReviewStates map[string]string `json:"reviews"`
 	Mergeable    bool              `json:"mergeable"`
 }
+
+// Committer describes the
+type Committer struct {
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
+	Date  time.Time `json:"date"`
+}
+
+// CommitDetails describes the deepest level commit details that we need.
+type CommitDetails struct {
+	Message      string    `json:"Message"`
+	CommentCount int       `json:"comment_count"`
+	Committer    Committer `json:"committer"`
+}
+
+// Commit describes the information of a commit.
+type Commit struct {
+	Sha     string        `json:"sha"`
+	Url     string        `json:"url"`
+	Details CommitDetails `json:"commit"`
+	Author  User          `json:"author"`
+}

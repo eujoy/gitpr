@@ -3,6 +3,8 @@ package command
 import (
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/command/commitlist"
+	"github.com/eujoy/gitpr/internal/infra/command/createrelease"
 	"github.com/eujoy/gitpr/internal/infra/command/find"
 	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
@@ -16,6 +18,12 @@ type userReposService interface {
 
 type pullRequestsService interface {
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
+}
+
+type repositoryService interface {
+	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
+	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
+	PrintCommitList(commitList []domain.Commit, useTmpl string) (string, error)
 }
 
 type tablePrinter interface {
@@ -35,17 +43,19 @@ type Builder struct {
 	cfg                 config.Config
 	userReposService    userReposService
 	pullRequestsService pullRequestsService
+	repositoryService   repositoryService
 	tablePrinter        tablePrinter
 	utils               utilities
 }
 
 // NewBuilder creates and returns a new command builder.
-func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utils utilities) *Builder {
+func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities) *Builder {
 	return &Builder{
 		commands:            []cli.Command{},
 		cfg:                 cfg,
 		userReposService:    userReposService,
 		pullRequestsService: pullRequestsService,
+		repositoryService:   repositoryService,
 		tablePrinter:        tablePrinter,
 		utils:               utils,
 	}
@@ -88,3 +98,20 @@ func (b *Builder) Widget() *Builder {
 
 	return b
 }
+
+// CommitList is used to retrieve and print a list of all the commits between 2 tags or commits.
+func (b *Builder) CommitList() *Builder {
+	commitListCmd := commitlist.NewCmd(b.cfg, b.repositoryService)
+	b.commands = append(b.commands, commitListCmd)
+
+	return b
+}
+
+// CreateRelease is used to create a new release tag using the provided tag value and also define the description of the new release.
+func (b *Builder) CreateRelease() *Builder {
+	createReleaseCmd := createrelease.NewCmd(b.cfg, b.repositoryService)
+	b.commands = append(b.commands, createReleaseCmd)
+
+	return b
+}
+

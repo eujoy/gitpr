@@ -5,9 +5,11 @@ import (
 )
 
 type githubClient interface {
+	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
+	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
 }
 
 // Resource describes the github resource.
@@ -20,6 +22,12 @@ func NewResource(githubClient githubClient) *Resource {
 	return &Resource{
 		githubClient: githubClient,
 	}
+}
+
+// GetDiffBetweenTags to get a list of commits.
+func (r *Resource) GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error) {
+	commitDetails, err := r.githubClient.GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag)
+	return commitDetails, err
 }
 
 // GetUserRepos retrieves all the user repositories from github.
@@ -38,4 +46,10 @@ func (r *Resource) GetPullRequestsOfRepository(authToken, repoOwner, repository,
 func (r *Resource) GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error) {
 	pullRequestReviews, err := r.githubClient.GetReviewStateOfPullRequest(authToken, repoOwner, repository, pullRequestNumber)
 	return pullRequestReviews, err
+}
+
+// CreateRelease is responsible for creating a release against a desired repository.
+func (r *Resource) CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error {
+	err := r.githubClient.CreateRelease(authToken, repoOwner, repository, tagName, draftRelease, name, body)
+	return err
 }

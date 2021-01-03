@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/eujoy/gitpr/internal/app/infra/pullrequests"
+	"github.com/eujoy/gitpr/internal/app/infra/repository"
 	"github.com/eujoy/gitpr/internal/app/infra/userrepos"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/infra/command"
@@ -40,15 +41,16 @@ func main() {
 	}
 
 	urSrv := userrepos.NewService(gitRepoFactory.GetClient())
+	repoSrv := repository.NewService(gitRepoFactory.GetClient())
 	prSrv := pullrequests.NewService(gitRepoFactory.GetClient())
 
 	switch cfg.Service.Mode {
 	case "cli":
-		startUpCliService(app, cfg, urSrv, prSrv)
+		startUpCliService(app, cfg, urSrv, prSrv, repoSrv)
 	case "http":
 		startUpHTTPServer(cfg, urSrv, prSrv)
 	default:
-		startUpCliService(app, cfg, urSrv, prSrv)
+		startUpCliService(app, cfg, urSrv, prSrv, repoSrv)
 	}
 }
 
@@ -61,17 +63,19 @@ func info(app *cli.App, cfg config.Config) {
 }
 
 // startUpCliService runs the service as a cli tool.
-func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service) {
+func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service, repoSrv *repository.Service) {
 	tp := printer.NewTablePrinter()
 	u := utils.New(cfg)
 
-	b := command.NewBuilder(cfg, urSrv, prSrv, tp, u)
+	b := command.NewBuilder(cfg, urSrv, prSrv, repoSrv, tp, u)
 
 	app.Commands = b.
 		Find().
 		PullRequests().
 		UserRepos().
 		Widget().
+		CommitList().
+		CreateRelease().
 		GetCommands()
 
 	err := app.Run(os.Args)

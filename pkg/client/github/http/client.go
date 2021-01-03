@@ -1,10 +1,12 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,6 +27,31 @@ func NewClient(httpClient *http.Client, configuration config.Config) *Client {
 		httpClient:    httpClient,
 		configuration: configuration,
 	}
+}
+
+// GetDiffBetweenTags to get a list of commits.
+func (c *Client) GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetDiffBetweenTags)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{existingTag}", existingTag, -1)
+	if latestTag == "" {
+		latestTag = "HEAD"
+	}
+	URL = strings.Replace(URL, "{newTag}", latestTag, -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return domain.CompareTagsResponse{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var compareTagsResponse domain.CompareTagsResponse
+	err = c.getResponse(req, &compareTagsResponse, nil)
+
+	return compareTagsResponse, err
 }
 
 // GetUserRepos retrieves all the user repositories from github.
@@ -96,6 +123,42 @@ func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository st
 	return pullRequestReviews, err
 }
 
+// CreateRelease makes a post request to github api to create a new release with description.
+func (c *Client) CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.PostCreateRelease)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+
+	data := url.Values{}
+	data.Set("tag_name", tagName)
+	data.Add("draft_release", strconv.FormatBool(draftRelease))
+	data.Add("body", body)
+	if name != "" {
+		data.Add("name", name)
+	}
+
+	values := map[string]interface{}{
+		"tag_name": tagName,
+		"draft": draftRelease,
+		"body": body,
+		"name": name,
+	}
+	jsonValue, _ := json.Marshal(values)
+
+	req, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	err = c.getResponse(req, nil, nil)
+
+	return err
+}
+
 // getResponse makes the actual request and converts the response to the respective required format.
 // Also, it parses the meta data in case it is required.
 func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.Meta) error {
@@ -111,14 +174,16 @@ func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.M
 		}
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	if data != nil {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
 
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		return err
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

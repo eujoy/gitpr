@@ -13,9 +13,11 @@ import (
 
 // Client describes the functions that muse be implemented by any client of the factory.
 type Client interface {
+	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
+	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
 }
 
 // Factory describes the factory for allowing the usage of several external clients of git repos.

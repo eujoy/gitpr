@@ -17,3 +17,8 @@ type RepoPullRequestsResponse struct {
 	PullRequests []PullRequest `json:"pull_requests"`
 	Meta         Meta          `json:"meta"`
 }
+
+// CompareTagsResponse describes the http response for retrieving the difference between two tags or commits.
+type CompareTagsResponse struct {
+	Commits []Commit `json:"commits"`
+}

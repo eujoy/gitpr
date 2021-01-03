@@ -20,9 +20,11 @@ type clients struct {
 }
 
 type endpoints struct {
+	GetDiffBetweenTags           string `yaml:"get_diff_between_tags"`
+	GetReviewStatusOfPullRequest string `yaml:"get_review_status_of_pull_request"`
 	GetUserRepos                 string `yaml:"get_user_repos"`
 	GetUserPullRequestsForRepo   string `yaml:"get_user_pull_requests_for_repo"`
-	GetReviewStatusOfPullRequest string `yaml:"get_review_status_of_pull_request"`
+	PostCreateRelease            string `yaml:"post_create_release"`
 }
 
 type headers struct {
