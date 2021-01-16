@@ -18,11 +18,12 @@ var commitListTerminalTemplate = `Commit List :
 var commitListReleaseTemplate = `Commits included from last release :
 
 {{- range .}}
-- [ ] ({{ .Author.Username }}) | {{ .Details.Message }}
+- [ ] (@{{ .Author.Username }}) | {{ .Details.Message }}
 {{- end}}`
 
 type resource interface {
     CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
+    GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
     GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 }
 
@@ -41,6 +42,12 @@ func NewService(resource resource) *Service {
             domain.CommitListReleaseTemplate:  commitListReleaseTemplate,
         },
     }
+}
+
+// GetCommitDetails to get the details of a commit.
+func (s *Service) GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error) {
+    commitDetails, err := s.resource.GetCommitDetails(authToken, repoOwner, repository, commitSha)
+    return commitDetails, err
 }
 
 // GetDiffBetweenTags to get a list of commits.

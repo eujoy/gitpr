@@ -8,8 +8,8 @@ type Repository struct {
 	Name        string `json:"name"`
 	FullName    string `json:"full_name"`
 	Description string `json:"description"`
-	HTMLURL     string `json:"html_url"`
-	SSHURL      string `json:"ssh_url"`
+	HtmlUrl     string `json:"html_url"`
+	SshUrl      string `json:"ssh_url"`
 	Private     bool   `json:"private"`
 	Language    string `json:"language"`
 	Stars       int    `json:"stargazers_count"`
@@ -37,7 +37,7 @@ type PullRequestReview struct {
 // PullRequest describes the details of a pull request.
 type PullRequest struct {
 	ID           int               `json:"id"`
-	HTMLURL      string            `json:"html_url"`
+	HtmlUrl      string            `json:"html_url"`
 	Number       int               `json:"number"`
 	Title        string            `json:"title"`
 	Creator      User              `json:"user"`
@@ -62,10 +62,20 @@ type CommitDetails struct {
 	Committer    Committer `json:"committer"`
 }
 
+// CommitFile describes the file details modified in a commit.
+type CommitFile struct {
+	Filename string `json:"filename"`
+	Additions int `json:"additions"`
+	Deletions int `json:"deletions"`
+	Changes int `json:"changes"`
+	Status string `json:"status"`
+}
+
 // Commit describes the information of a commit.
 type Commit struct {
 	Sha     string        `json:"sha"`
 	Url     string        `json:"url"`
 	Details CommitDetails `json:"commit"`
 	Author  User          `json:"author"`
+	Files   []CommitFile    `json:"files"`
 }

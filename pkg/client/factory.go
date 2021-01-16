@@ -13,6 +13,7 @@ import (
 
 // Client describes the functions that muse be implemented by any client of the factory.
 type Client interface {
+	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
 	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)

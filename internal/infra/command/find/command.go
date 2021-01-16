@@ -10,7 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type userReposService interface {
@@ -30,7 +30,7 @@ type utilities interface {
 }
 
 // NewCmd creates a new command to prompt several questions to user to retrieve pull requests..
-func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utilities utilities) cli.Command {
+func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, tablePrinter tablePrinter, utilities utilities) *cli.Command {
 	var authToken string
 	// var pageSize  int
 
@@ -39,7 +39,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 		Aliases: []string{"f"},
 		Usage:   "Find the pull requests of multiple user repositories.",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "auth_token, t",
 				Usage:       "Github authorization token.",
 				Value:       cfg.Clients.Github.Token.DefaultValue,
@@ -51,7 +51,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 			// @todo Add a flag to allow providing a comma separated list of pull request reviewer(s) - by survey.Input or by cli.Flag.
 			//
 		},
-		Action: func(c *cli.Context) {
+		Action: func(c *cli.Context) error {
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
 			utilities.ClearTerminalScreen()
@@ -86,10 +86,12 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 			utilities.ClearTerminalScreen()
 
 			tablePrinter.PrintPullRequest(pullRequests)
+
+			return nil
 		},
 	}
 
-	return findCmd
+	return &findCmd
 }
 
 // promptBranchInput asks for branch and returns the provided option.

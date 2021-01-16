@@ -29,9 +29,30 @@ func NewClient(httpClient *http.Client, configuration config.Config) *Client {
 	}
 }
 
+// GetCommitDetails to get the details of a commit.
+func (c *Client) GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetCommitDetails)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{commitSha}", commitSha, -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return domain.Commit{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var commitInfo domain.Commit
+	err = c.getResponse(req, &commitInfo, nil)
+
+	return commitInfo, err
+}
+
 // GetDiffBetweenTags to get a list of commits.
 func (c *Client) GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetDiffBetweenTags)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetDiffBetweenTags)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 	URL = strings.Replace(URL, "{existingTag}", existingTag, -1)
@@ -56,7 +77,7 @@ func (c *Client) GetDiffBetweenTags(authToken, repoOwner, repository, existingTa
 
 // GetUserRepos retrieves all the user repositories from github.
 func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetUserRepos)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetUserRepos)
 	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
 	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
 
@@ -77,7 +98,7 @@ func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) (d
 
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
 func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetUserPullRequestsForRepo)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetUserPullRequestsForRepo)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 	URL = strings.Replace(URL, "{prState}", prState, -1)
@@ -104,7 +125,7 @@ func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, b
 
 // GetReviewStateOfPullRequest retrieves the reviews of a pull request.
 func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error) {
-	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.GetReviewStatusOfPullRequest)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetReviewStatusOfPullRequest)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 	URL = strings.Replace(URL, "{pullRequestNumber}", strconv.Itoa(pullRequestNumber), -1)
@@ -125,7 +146,7 @@ func (c *Client) GetReviewStateOfPullRequest(authToken, repoOwner, repository st
 
 // CreateRelease makes a post request to github api to create a new release with description.
 func (c *Client) CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error {
-	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.APIURL, c.configuration.Clients.Github.Endpoints.PostCreateRelease)
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.PostCreateRelease)
 	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
 	URL = strings.Replace(URL, "{repository}", repository, -1)
 

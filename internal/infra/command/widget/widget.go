@@ -8,7 +8,7 @@ import (
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type userReposService interface {
@@ -20,7 +20,7 @@ type pullRequestService interface {
 }
 
 // NewCmd creates a new command to display the details retrieved as widgets in terminal.
-func NewCmd(cfg config.Config, userReposService userReposService, pullRequestService pullRequestService) cli.Command {
+func NewCmd(cfg config.Config, userReposService userReposService, pullRequestService pullRequestService) *cli.Command {
 	var authToken string
 
 	widgetCmd := cli.Command{
@@ -28,7 +28,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 		Aliases: []string{"w"},
 		Usage:   "Display a widget based terminal which will include all the details required.",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "auth_token, t",
 				Usage:       "Github authorization token.",
 				Value:       cfg.Clients.Github.Token.DefaultValue,
@@ -36,7 +36,7 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 				Required:    false,
 			},
 		},
-		Action: func(c *cli.Context) {
+		Action: func(c *cli.Context) error {
 			app := tview.NewApplication()
 
 			selectedPrState := cfg.Settings.PullRequestState
@@ -119,10 +119,12 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestSer
 			if err := app.SetRoot(grid, true).EnableMouse(true).Run(); err != nil {
 				panic(err)
 			}
+
+			return nil
 		},
 	}
 
-	return widgetCmd
+	return &widgetCmd
 }
 
 // getAllUserRepoNames retrieve all the repos that the user has access to and returns a list of their names.
@@ -190,7 +192,7 @@ func getPrimaryAndSecondaryTextForPullRequest(pullRequest domain.PullRequest) (s
 	primaryText := fmt.Sprintf("%v - by '%v'", pullRequest.Title, pullRequest.Creator.Username)
 	secondaryText := fmt.Sprintf(
 		"%v | Status: %v | [APPROVED: %v - PENDING: %v - REQUEST CHANGES: %v - TOTAL: %v]",
-		pullRequest.HTMLURL,
+		pullRequest.HtmlUrl,
 		pullRequest.State,
 		approved,
 		pending,

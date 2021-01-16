@@ -12,6 +12,7 @@ clients:
       default_env_var: "GITPR_GITHUB_AUTH_TOKEN"
       default_value: ""
     endpoints:
+      get_commit_details: "/repos/{repoOwner}/{repository}/commits/{commitSha}"
       get_diff_between_tags: "/repos/{repoOwner}/{repository}/compare/{existingTag}...{newTag}"
       get_review_status_of_pull_request: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/reviews"
       get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"

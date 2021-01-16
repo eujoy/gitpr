@@ -20,6 +20,7 @@ type clients struct {
 }
 
 type endpoints struct {
+	GetCommitDetails             string `yaml:"get_commit_details"`
 	GetDiffBetweenTags           string `yaml:"get_diff_between_tags"`
 	GetReviewStatusOfPullRequest string `yaml:"get_review_status_of_pull_request"`
 	GetUserRepos                 string `yaml:"get_user_repos"`
@@ -37,7 +38,7 @@ type token struct {
 }
 
 type github struct {
-	APIURL    string        `yaml:"api_url"`
+	ApiUrl    string        `yaml:"api_url"`
 	Headers   headers       `yaml:"headers"`
 	Endpoints endpoints     `yaml:"endpoints"`
 	Timeout   time.Duration `yaml:"timeout"`

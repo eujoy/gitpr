@@ -5,6 +5,7 @@ import (
 )
 
 type githubClient interface {
+	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
 	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
@@ -24,10 +25,16 @@ func NewResource(githubClient githubClient) *Resource {
 	}
 }
 
+// GetCommitDetails to get the details of a commit.
+func (r *Resource) GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error) {
+	commitDetails, err := r.githubClient.GetCommitDetails(authToken, repoOwner, repository, commitSha)
+	return commitDetails, err
+}
+
 // GetDiffBetweenTags to get a list of commits.
 func (r *Resource) GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error) {
-	commitDetails, err := r.githubClient.GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag)
-	return commitDetails, err
+	diffBetweenTags, err := r.githubClient.GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag)
+	return diffBetweenTags, err
 }
 
 // GetUserRepos retrieves all the user repositories from github.

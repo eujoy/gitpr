@@ -15,7 +15,7 @@ import (
 	"github.com/eujoy/gitpr/pkg/client"
 	"github.com/eujoy/gitpr/pkg/printer"
 	"github.com/eujoy/gitpr/pkg/utils"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -56,7 +56,12 @@ func main() {
 
 // info sets up the information of the tool.
 func info(app *cli.App, cfg config.Config) {
-	app.Author = cfg.Application.Author
+	app.Authors = []*cli.Author{
+		{
+			Name:  cfg.Application.Author,
+			Email: "",
+		},
+	}
 	app.Name = cfg.Application.Name
 	app.Usage = cfg.Application.Usage
 	app.Version = cfg.Application.Version

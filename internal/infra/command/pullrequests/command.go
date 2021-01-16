@@ -2,14 +2,13 @@ package pullrequests
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type service interface {
@@ -27,7 +26,7 @@ type utilities interface {
 }
 
 // NewCmd creates a new command to retrieve pull requests for a repo.
-func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
+func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) *cli.Command {
 	var authToken, repoOwner, repository, baseBranch, prState string
 	var pageSize int
 
@@ -36,42 +35,42 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 		Aliases: []string{"p"},
 		Usage:   "Retrieves and prints all the pull requests of a user for a repository.",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "auth_token, t",
 				Usage:       "Github authorization token.",
 				Value:       cfg.Clients.Github.Token.DefaultValue,
 				Destination: &authToken,
 				Required:    false,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "owner, o",
 				Usage:       "Owner of the repository to retrieve pull requests for.",
 				Value:       "",
 				Destination: &repoOwner,
 				Required:    true,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "repository, r",
 				Usage:       "Repository name to check.",
 				Value:       "",
 				Destination: &repository,
 				Required:    true,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "base, b",
 				Usage:       "Base branch to check pull requests against.",
 				Value:       cfg.Settings.BaseBranch,
 				Destination: &baseBranch,
 				Required:    false,
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "state, a",
 				Usage:       "State of the pull request.",
 				Value:       cfg.Settings.PullRequestState,
 				Destination: &prState,
 				Required:    false,
 			},
-			cli.IntFlag{
+			&cli.IntFlag{
 				Name:        "page_size, s",
 				Usage:       "Size of each page to load.",
 				Value:       cfg.Settings.PageSize,
@@ -79,7 +78,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				Required:    false,
 			},
 		},
-		Action: func(c *cli.Context) {
+		Action: func(c *cli.Context) error {
 			var shallContinue bool
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
@@ -94,7 +93,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				prResp, err := service.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, currentPage)
 				if err != nil {
 					fmt.Println(err)
-					os.Exit(1)
+					return err
 				}
 
 				spinLoader.Stop()
@@ -111,7 +110,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				err = survey.AskOne(prompt, &whatToDo)
 				if err != nil {
 					fmt.Println(err)
-					os.Exit(1)
+					return err
 				}
 
 				currentPage, shallContinue = utilities.GetNextPageNumberOrExit(whatToDo, currentPage)
@@ -119,13 +118,13 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 					continue
 				} else {
 					fmt.Println("Finished!!")
-					return
+					return nil
 				}
 			}
 		},
 	}
 
-	return pullRequestsCmd
+	return &pullRequestsCmd
 }
 
 // validatePrStateAndGetDefault checks if the requested state of pull requests is valid and returns

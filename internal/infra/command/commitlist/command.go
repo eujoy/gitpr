@@ -6,7 +6,7 @@ import (
 
     "github.com/eujoy/gitpr/internal/config"
     "github.com/eujoy/gitpr/internal/domain"
-    "github.com/urfave/cli"
+    "github.com/urfave/cli/v2"
 )
 
 type service interface {
@@ -15,7 +15,7 @@ type service interface {
 }
 
 // NewCmd creates a new command to retrieve the commits between 2 provided tags or commits.
-func NewCmd(cfg config.Config, service service) cli.Command {
+func NewCmd(cfg config.Config, service service) *cli.Command {
     var authToken, repoOwner, repository, startTag, endTag string
 
     commitListCmd := cli.Command{
@@ -23,35 +23,35 @@ func NewCmd(cfg config.Config, service service) cli.Command {
         Aliases: []string{"c"},
         Usage:   "Retrieves and prints the list of commits between two provided tags or commits.",
         Flags: []cli.Flag{
-            cli.StringFlag{
+            &cli.StringFlag{
                 Name:        "auth_token, t",
                 Usage:       "Github authorization token.",
                 Value:       cfg.Clients.Github.Token.DefaultValue,
                 Destination: &authToken,
                 Required:    false,
             },
-            cli.StringFlag{
+            &cli.StringFlag{
                 Name:        "owner, o",
                 Usage:       "Owner of the repository to retrieve pull requests for.",
                 Value:       "",
                 Destination: &repoOwner,
                 Required:    true,
             },
-            cli.StringFlag{
+            &cli.StringFlag{
                 Name:        "repository, r",
                 Usage:       "Repository name to check.",
                 Value:       "",
                 Destination: &repository,
                 Required:    true,
             },
-            cli.StringFlag{
+            &cli.StringFlag{
                 Name:        "start_tag, s",
                 Usage:       "The starting tag/commit to compare against.",
                 Value:       "",
                 Destination: &startTag,
                 Required:    true,
             },
-            cli.StringFlag{
+            &cli.StringFlag{
                 Name:        "end_tag, e",
                 Usage:       "The ending/latest tag/commit to compare against.",
                 Value:       "HEAD",
@@ -59,7 +59,7 @@ func NewCmd(cfg config.Config, service service) cli.Command {
                 Required:    true,
             },
         },
-        Action: func(c *cli.Context) {
+        Action: func(c *cli.Context) error {
             commitList, err := service.GetDiffBetweenTags(authToken, repoOwner, repository, startTag, endTag)
             if err != nil {
                 fmt.Println(err)
@@ -72,8 +72,10 @@ func NewCmd(cfg config.Config, service service) cli.Command {
             }
 
             fmt.Println(commitListPrintout)
+
+            return nil
         },
     }
 
-    return commitListCmd
+    return &commitListCmd
 }

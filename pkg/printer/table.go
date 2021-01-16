@@ -22,7 +22,7 @@ func (t *TablePrinter) PrintRepos(repos []domain.Repository) {
 	outputTable.AppendHeader(table.Row{"ID", "Name", "Full Name", "Url", "ssh Url", "Private", "Language", "Stars"})
 
 	for _, r := range repos {
-		outputTable.AppendRow(table.Row{r.ID, r.Name, r.FullName, r.HTMLURL, r.SSHURL, r.Private, r.Language, r.Stars})
+		outputTable.AppendRow(table.Row{r.ID, r.Name, r.FullName, r.HtmlUrl, r.SshUrl, r.Private, r.Language, r.Stars})
 	}
 
 	outputTable.AppendSeparator()
@@ -61,7 +61,7 @@ func (t *TablePrinter) PrintPullRequest(pullRequests []domain.PullRequest) {
 			}
 		}
 
-		outputTable.AppendRow(table.Row{p.Number, p.HTMLURL, p.Title, p.Labels, p.State, approved, requestedChanges, total})
+		outputTable.AppendRow(table.Row{p.Number, p.HtmlUrl, p.Title, p.Labels, p.State, approved, requestedChanges, total})
 	}
 
 	outputTable.AppendSeparator()

@@ -9,7 +9,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type service interface {
@@ -27,7 +27,7 @@ type utilities interface {
 }
 
 // NewCmd creates a new command to retrieve the repos of a user.
-func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) cli.Command {
+func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utilities utilities) *cli.Command {
 	var authToken string
 	var pageSize int
 
@@ -36,14 +36,14 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 		Aliases: []string{"u"},
 		Usage:   "Retrieves and prints the repos of an authenticated user.",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:        "auth_token, t",
 				Usage:       "Github authorization token.",
 				Value:       cfg.Clients.Github.Token.DefaultValue,
 				Destination: &authToken,
 				Required:    false,
 			},
-			cli.IntFlag{
+			&cli.IntFlag{
 				Name:        "page_size, s",
 				Usage:       "Size of each page to load.",
 				Value:       cfg.Settings.PageSize,
@@ -51,7 +51,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				Required:    false,
 			},
 		},
-		Action: func(c *cli.Context) {
+		Action: func(c *cli.Context) error {
 			var shallContinue bool
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
@@ -64,7 +64,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 				userRepos, err := service.GetUserRepos(authToken, pageSize, currentPage)
 				if err != nil {
 					fmt.Println(err)
-					return
+					return err
 				}
 
 				spinLoader.Stop()
@@ -89,11 +89,13 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 					continue
 				} else {
 					fmt.Println("Finished!!")
-					return
+					return nil
 				}
 			}
+
+			return nil
 		},
 	}
 
-	return userReposCmd
+	return &userReposCmd
 }

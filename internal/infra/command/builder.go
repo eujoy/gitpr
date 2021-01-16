@@ -9,7 +9,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 type userReposService interface {
@@ -21,6 +21,7 @@ type pullRequestsService interface {
 }
 
 type repositoryService interface {
+	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
 	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	PrintCommitList(commitList []domain.Commit, useTmpl string) (string, error)
@@ -39,7 +40,7 @@ type utilities interface {
 
 // Builder describes the builder of the cli commands.
 type Builder struct {
-	commands            []cli.Command
+	commands            []*cli.Command
 	cfg                 config.Config
 	userReposService    userReposService
 	pullRequestsService pullRequestsService
@@ -51,7 +52,7 @@ type Builder struct {
 // NewBuilder creates and returns a new command builder.
 func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities) *Builder {
 	return &Builder{
-		commands:            []cli.Command{},
+		commands:            []*cli.Command{},
 		cfg:                 cfg,
 		userReposService:    userReposService,
 		pullRequestsService: pullRequestsService,
@@ -62,7 +63,7 @@ func NewBuilder(cfg config.Config, userReposService userReposService, pullReques
 }
 
 // GetCommands returns the list of allowed commands.
-func (b *Builder) GetCommands() []cli.Command {
+func (b *Builder) GetCommands() []*cli.Command {
 	return b.commands
 }
 
