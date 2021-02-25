@@ -1,7 +1,10 @@
 package printer
 
 import (
+	"fmt"
+	"math"
 	"os"
+	"time"
 
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -62,6 +65,41 @@ func (t *TablePrinter) PrintPullRequest(pullRequests []domain.PullRequest) {
 		}
 
 		outputTable.AppendRow(table.Row{p.Number, p.HtmlUrl, p.Title, p.Labels, p.State, approved, requestedChanges, total})
+	}
+
+	outputTable.AppendSeparator()
+	outputTable.SetStyle(table.StyleBold)
+	outputTable.Render()
+}
+
+// PrintPullRequestLeadTime prints pull requests lead time as table.
+func (t *TablePrinter) PrintPullRequestLeadTime(pullRequests []domain.PullRequestMetricDetails) {
+	outputTable := table.NewWriter()
+	outputTable.SetOutputMirror(os.Stdout)
+	outputTable.AppendHeader(table.Row{"#", "Title", "Comments", "Review Comments", "Commits", "Additions", "Deletions", "Changed Files", "Lead Time", "Time to Merge", "Created At"})
+
+	for _, p := range pullRequests {
+		leadTime := ""
+		if p.LeadTime != time.Duration(0) {
+			days := int64(p.LeadTime.Hours() / 24)
+			hours := int64(math.Mod(p.LeadTime.Hours(), 24))
+			minutes := int64(math.Mod(p.LeadTime.Minutes(), 60))
+			seconds := int64(math.Mod(p.LeadTime.Seconds(), 60))
+
+			leadTime = fmt.Sprintf("%d days & %d:%d:%d", days, hours, minutes, seconds)
+		}
+
+		timeToMerge := ""
+		if p.TimeToMerge != time.Duration(0) {
+			days := int64(p.TimeToMerge.Hours() / 24)
+			hours := int64(math.Mod(p.TimeToMerge.Hours(), 24))
+			minutes := int64(math.Mod(p.TimeToMerge.Minutes(), 60))
+			seconds := int64(math.Mod(p.TimeToMerge.Seconds(), 60))
+
+			timeToMerge = fmt.Sprintf("%d days & %d:%d:%d", days, hours, minutes, seconds)
+		}
+
+		outputTable.AppendRow(table.Row{p.Number, p.Title, p.Comments, p.ReviewComments, p.Commits, p.Additions, p.Deletions, p.ChangedFiles, leadTime, timeToMerge, p.CreatedAt})
 	}
 
 	outputTable.AppendSeparator()

@@ -36,16 +36,28 @@ type PullRequestReview struct {
 
 // PullRequest describes the details of a pull request.
 type PullRequest struct {
-	ID           int               `json:"id"`
-	HtmlUrl      string            `json:"html_url"`
-	Number       int               `json:"number"`
-	Title        string            `json:"title"`
-	Creator      User              `json:"user"`
-	Reviewers    []User            `json:"requested_reviewers"`
-	Labels       []Label           `json:"labels"`
-	State        string            `json:"state"`
-	ReviewStates map[string]string `json:"reviews"`
-	Mergeable    bool              `json:"mergeable"`
+	ID             int               `json:"id"`
+	HtmlUrl        string            `json:"html_url"`
+	Number         int               `json:"number"`
+	Title          string            `json:"title"`
+	Creator        User              `json:"user"`
+	Reviewers      []User            `json:"requested_reviewers"`
+	Labels         []Label           `json:"labels"`
+	State          string            `json:"state"`
+	ReviewStates   map[string]string `json:"reviews"`
+	Mergeable      bool              `json:"mergeable"`
+	MergeCommitSha string            `json:"merge_commit_sha"`
+	CreatedAt      time.Time         `json:"created_at"`
+	UpdatedAt      time.Time         `json:"updated_at"`
+	ClosedAt       time.Time         `json:"closed_at"`
+	MergedAt       time.Time         `json:"merged_at"`
+
+	Comments       int `json:"comments"`
+	ReviewComments int `json:"review_comments"`
+	Commits        int `json:"commits"`
+	Additions      int `json:"additions"`
+	Deletions      int `json:"deletions"`
+	ChangedFiles   int `json:"changed_files"`
 }
 
 // Committer describes the
@@ -77,5 +89,21 @@ type Commit struct {
 	Url     string        `json:"url"`
 	Details CommitDetails `json:"commit"`
 	Author  User          `json:"author"`
-	Files   []CommitFile    `json:"files"`
+	Files   []CommitFile   `json:"files"`
+}
+
+// PullRequestMetricDetails describes the pull request lead time details to be kept.
+type PullRequestMetricDetails struct {
+	Number      int           `json:"number"`
+	Title       string        `json:"title"`
+	LeadTime    time.Duration `json:"lead_time"`
+	TimeToMerge time.Duration `json:"time_to_merge"`
+	CreatedAt   time.Time     `json:"created_at"`
+
+	Comments       int `json:"comments"`
+	ReviewComments int `json:"review_comments"`
+	Commits        int `json:"commits"`
+	Additions      int `json:"additions"`
+	Deletions      int `json:"deletions"`
+	ChangedFiles   int `json:"changed_files"`
 }

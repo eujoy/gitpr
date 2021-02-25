@@ -16,6 +16,8 @@ type Client interface {
 	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
 	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
+	GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error)
+	GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error

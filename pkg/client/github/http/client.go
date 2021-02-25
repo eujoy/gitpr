@@ -96,6 +96,50 @@ func (c *Client) GetUserRepos(authToken string, pageSize int, pageNumber int) (d
 	return userReposResponse, err
 }
 
+// GetPullRequestsCommits retrieves the commits of a specific pull request.
+func (c *Client) GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetPullRequestCommits)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{pullRequestNumber}", strconv.Itoa(pullRequestNumber), -1)
+	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
+	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return []domain.Commit{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var pullRequestCommits []domain.Commit
+	err = c.getResponse(req, &pullRequestCommits, nil)
+
+	return pullRequestCommits, err
+}
+
+// GetPullRequestsDetails retrieves the details of a specific pull request.
+func (c *Client) GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetPullRequestDetails)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{pullRequestNumber}", strconv.Itoa(pullRequestNumber), -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return domain.PullRequest{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var pullRequestDetails domain.PullRequest
+	err = c.getResponse(req, &pullRequestDetails, nil)
+
+	return pullRequestDetails, err
+}
+
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
 func (c *Client) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetUserPullRequestsForRepo)
