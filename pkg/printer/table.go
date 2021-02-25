@@ -10,6 +10,18 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
+type total struct {
+	comments       int
+	reviewComments int
+	commits        int
+	additions      int
+	deletions      int
+	changedFiles   int
+
+	leadTime time.Duration
+	timeToMerge time.Duration
+}
+
 // TablePrinter wraps the printout for models as table.
 type TablePrinter struct{}
 
@@ -74,6 +86,8 @@ func (t *TablePrinter) PrintPullRequest(pullRequests []domain.PullRequest) {
 
 // PrintPullRequestLeadTime prints pull requests lead time as table.
 func (t *TablePrinter) PrintPullRequestLeadTime(pullRequests []domain.PullRequestMetricDetails) {
+	totalData := total{}
+
 	outputTable := table.NewWriter()
 	outputTable.SetOutputMirror(os.Stdout)
 	outputTable.AppendHeader(table.Row{"#", "Title", "Comments", "Review Comments", "Commits", "Additions", "Deletions", "Changed Files", "Lead Time", "Time to Merge", "Created At"})
@@ -81,28 +95,81 @@ func (t *TablePrinter) PrintPullRequestLeadTime(pullRequests []domain.PullReques
 	for _, p := range pullRequests {
 		leadTime := ""
 		if p.LeadTime != time.Duration(0) {
-			days := int64(p.LeadTime.Hours() / 24)
-			hours := int64(math.Mod(p.LeadTime.Hours(), 24))
-			minutes := int64(math.Mod(p.LeadTime.Minutes(), 60))
-			seconds := int64(math.Mod(p.LeadTime.Seconds(), 60))
-
-			leadTime = fmt.Sprintf("%d days & %d:%d:%d", days, hours, minutes, seconds)
+			totalData.leadTime += p.LeadTime
+			leadTime = convertDurationToString(p.LeadTime)
 		}
 
 		timeToMerge := ""
 		if p.TimeToMerge != time.Duration(0) {
-			days := int64(p.TimeToMerge.Hours() / 24)
-			hours := int64(math.Mod(p.TimeToMerge.Hours(), 24))
-			minutes := int64(math.Mod(p.TimeToMerge.Minutes(), 60))
-			seconds := int64(math.Mod(p.TimeToMerge.Seconds(), 60))
-
-			timeToMerge = fmt.Sprintf("%d days & %d:%d:%d", days, hours, minutes, seconds)
+			totalData.timeToMerge += p.TimeToMerge
+			timeToMerge = convertDurationToString(p.TimeToMerge)
 		}
 
 		outputTable.AppendRow(table.Row{p.Number, p.Title, p.Comments, p.ReviewComments, p.Commits, p.Additions, p.Deletions, p.ChangedFiles, leadTime, timeToMerge, p.CreatedAt})
+
+		updateTotals(&totalData, p)
 	}
 
+	totalRow, averageRow := getTotalAndAverageRows(len(pullRequests), totalData)
+
 	outputTable.AppendSeparator()
+	outputTable.AppendRow(totalRow)
+	outputTable.AppendSeparator()
+	outputTable.AppendRow(averageRow)
 	outputTable.SetStyle(table.StyleBold)
 	outputTable.Render()
+}
+
+func updateTotals(totalData *total, metricDetails domain.PullRequestMetricDetails) {
+	totalData.comments       += metricDetails.Comments
+	totalData.reviewComments += metricDetails.ReviewComments
+	totalData.commits        += metricDetails.Commits
+	totalData.additions      += metricDetails.Additions
+	totalData.deletions      += metricDetails.Deletions
+	totalData.changedFiles   += metricDetails.ChangedFiles
+}
+
+func convertDurationToString(dur time.Duration) string {
+	days := int64(dur.Hours() / 24)
+	hours := int64(math.Mod(dur.Hours(), 24))
+	minutes := int64(math.Mod(dur.Minutes(), 60))
+	seconds := int64(math.Mod(dur.Seconds(), 60))
+
+	formattedDuration := fmt.Sprintf("%d days & %02d:%02d:%02d", days, hours, minutes, seconds)
+
+	return formattedDuration
+}
+
+func getTotalAndAverageRows(totalPullRequests int, totalData total) (table.Row, table.Row) {
+	totalPullRequestsFloat := float64(totalPullRequests)
+
+	totalTableRow := table.Row{
+		"",
+		"Total",
+		totalData.comments,
+		totalData.reviewComments,
+		totalData.commits,
+		totalData.additions,
+		totalData.deletions,
+		totalData.changedFiles,
+		convertDurationToString(totalData.leadTime),
+		convertDurationToString(totalData.timeToMerge),
+		"",
+	}
+
+	averageTableRow := table.Row{
+		"",
+		"Average",
+		fmt.Sprintf("%.2f", float64(totalData.comments)/totalPullRequestsFloat),
+		fmt.Sprintf("%.2f", float64(totalData.reviewComments)/totalPullRequestsFloat),
+		fmt.Sprintf("%.2f", float64(totalData.commits)/totalPullRequestsFloat),
+		fmt.Sprintf("%.2f", float64(totalData.additions)/totalPullRequestsFloat),
+		fmt.Sprintf("%.2f", float64(totalData.deletions)/totalPullRequestsFloat),
+		fmt.Sprintf("%.2f", float64(totalData.changedFiles)/totalPullRequestsFloat),
+		"",
+		"",
+		"",
+	}
+
+	return totalTableRow, averageTableRow
 }
