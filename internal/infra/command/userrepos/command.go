@@ -89,7 +89,7 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 					continue
 				} else {
 					fmt.Println("Finished!!")
-					return nil
+					break
 				}
 			}
 

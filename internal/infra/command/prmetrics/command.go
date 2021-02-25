@@ -162,7 +162,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 							return err
 						}
 
-						actualTimeToMerge := firstCommitsList[0].Details.Committer.Date.Sub(time.Now())
+						actualTimeToMerge := time.Until(firstCommitsList[0].Details.Committer.Date)
 
 						if pullRequestDetails.MergeCommitSha != "" {
 							lastCommit, err := repositoryService.GetCommitDetails(authToken, repoOwner, repository, pullRequestDetails.MergeCommitSha)
