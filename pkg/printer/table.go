@@ -83,10 +83,15 @@ func (t *TablePrinter) PrintPullRequestFlowRatio(flowRatioData map[string]*domai
 	sort.Strings(dates)
 
 	for _, d := range dates {
+		if d == "Summary" {
+			continue
+		}
 		fd := flowRatioData[d]
 		outputTable.AppendRow(table.Row{d, fd.Created, fd.Merged, fd.Ratio})
 	}
 
+	outputTable.AppendSeparator()
+	outputTable.AppendRow(table.Row{"Summary", flowRatioData["Summary"].Created, flowRatioData["Summary"].Merged, flowRatioData["Summary"].Ratio})
 	outputTable.AppendSeparator()
 	outputTable.SetStyle(table.StyleBold)
 	outputTable.Render()

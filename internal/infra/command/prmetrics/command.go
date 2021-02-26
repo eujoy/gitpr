@@ -251,9 +251,20 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				Average:   calculateAvgAggregation(utilities, len(prMetricsDetails), totalAggregation),
 			}
 
+			totalCreated := 0
+			totalMerged := 0
 			for _, fd := range prFlowRatio {
+				totalCreated += fd.Created
+				totalMerged += fd.Merged
+
 				ratio := float64(fd.Created)/float64(fd.Merged)
 				fd.Ratio = fmt.Sprintf("%.2f", ratio)
+			}
+
+			prFlowRatio["Summary"] = &domain.PullRequestFlowRatio{
+				Created: totalCreated,
+				Merged:  totalMerged,
+				Ratio:   fmt.Sprintf("%.2f", float64(totalCreated)/float64(totalMerged)),
 			}
 
 			spinLoader.Stop()
