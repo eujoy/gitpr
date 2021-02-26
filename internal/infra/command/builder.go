@@ -11,6 +11,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
 	"github.com/urfave/cli/v2"
+	"time"
 )
 
 type userReposService interface {
@@ -33,13 +34,14 @@ type repositoryService interface {
 type tablePrinter interface {
 	PrintRepos(repos []domain.Repository)
 	PrintPullRequest(pullRequests []domain.PullRequest)
-	PrintPullRequestLeadTime(pullRequests []domain.PullRequestMetricDetails)
+	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
 }
 
 type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
 	GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool)
+	ConvertDurationToString(dur time.Duration) string
 }
 
 // Builder describes the builder of the cli commands.

@@ -94,11 +94,13 @@ type Commit struct {
 
 // PullRequestMetricDetails describes the pull request lead time details to be kept.
 type PullRequestMetricDetails struct {
-	Number      int           `json:"number"`
-	Title       string        `json:"title"`
-	LeadTime    time.Duration `json:"lead_time"`
-	TimeToMerge time.Duration `json:"time_to_merge"`
-	CreatedAt   time.Time     `json:"created_at"`
+	Number         int           `json:"number"`
+	Title          string        `json:"title"`
+	LeadTime       time.Duration `json:"lead_time"`
+	TimeToMerge    time.Duration `json:"time_to_merge"`
+	StrLeadTime    string        `json:"str_lead_time"`
+	StrTimeToMerge string        `json:"str_time_to_merge"`
+	CreatedAt      time.Time     `json:"created_at"`
 
 	Comments       int `json:"comments"`
 	ReviewComments int `json:"review_comments"`
@@ -106,4 +108,41 @@ type PullRequestMetricDetails struct {
 	Additions      int `json:"additions"`
 	Deletions      int `json:"deletions"`
 	ChangedFiles   int `json:"changed_files"`
+}
+
+// TotalAggregation describes the total aggregation metrics of data.
+type TotalAggregation struct {
+	Comments       int           `json:"comments"`
+	ReviewComments int           `json:"review_comments"`
+	Commits        int           `json:"commits"`
+	Additions      int           `json:"additions"`
+	Deletions      int           `json:"deletions"`
+	ChangedFiles   int           `json:"changed_files"`
+
+	LeadTime       time.Duration `json:"lead_time"`
+	TimeToMerge    time.Duration `json:"time_to_merge"`
+	StrLeadTime    string        `json:"str_lead_time"`
+	StrTimeToMerge string        `json:"str_time_to_merge"`
+}
+
+// AverageAggregation describes the average aggregation metrics of data.
+type AverageAggregation struct {
+	Comments       float64 `json:"comments"`
+	ReviewComments float64 `json:"review_comments"`
+	Commits        float64 `json:"commits"`
+	Additions      float64 `json:"additions"`
+	Deletions      float64 `json:"deletions"`
+	ChangedFiles   float64 `json:"changed_files"`
+
+	LeadTime       time.Duration `json:"lead_time"`
+	TimeToMerge    time.Duration `json:"time_to_merge"`
+	StrLeadTime    string        `json:"str_lead_time"`
+	StrTimeToMerge string        `json:"str_time_to_merge"`
+}
+
+// PullRequestMetrics describes the full details required for the metrics.
+type PullRequestMetrics struct {
+	PRDetails []PullRequestMetricDetails `json:"pr_metrics"`
+	Total     TotalAggregation           `json:"total"`
+	Average   AverageAggregation         `jsom:"average"`
 }

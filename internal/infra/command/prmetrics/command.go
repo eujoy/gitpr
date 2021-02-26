@@ -22,13 +22,14 @@ type repositoryService interface {
 }
 
 type tablePrinter interface {
-	PrintPullRequestLeadTime(pullRequests []domain.PullRequestMetricDetails)
+	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
 }
 
 type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
 	GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool)
+	ConvertDurationToString(dur time.Duration) string
 }
 
 // NewCmd creates a new command to retrieve pull requests for a repo.
@@ -115,7 +116,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 			},
 		},
 		Action: func(c *cli.Context) error {
-			var prLeadTimes []domain.PullRequestMetricDetails
+			var prMetricsDetails []domain.PullRequestMetricDetails
 			shallContinue := true
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
@@ -127,6 +128,11 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 			endDate, endDateParseErr := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%v 23:59:59", endDateStr))
 			if startDateParseErr != nil {
 				fmt.Printf("Failed to parse date %q with error : %v\n", endDateStr, endDateParseErr)
+			}
+
+			totalAggregation := domain.TotalAggregation{
+				LeadTime:       time.Duration(0),
+				TimeToMerge:    time.Duration(0),
 			}
 
 			prState = validatePrStateAndGetDefault(cfg, prState)
@@ -146,6 +152,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 						actualLeadTime := time.Duration(0)
 						if !pr.MergedAt.IsZero() {
 							actualLeadTime = pr.MergedAt.Sub(pr.CreatedAt)
+							totalAggregation.LeadTime += actualLeadTime
 						}
 
 						pullRequestDetails, err := pullRequestService.GetPullRequestsDetails(authToken, repoOwner, repository, pr.Number)
@@ -173,13 +180,16 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 							}
 
 							actualTimeToMerge = lastCommit.Details.Committer.Date.Sub(firstCommitsList[0].Details.Committer.Date)
+							totalAggregation.TimeToMerge += actualTimeToMerge
 						}
 
-						leadTm := domain.PullRequestMetricDetails{
+						prMetric := domain.PullRequestMetricDetails{
 							Number:         pr.Number,
 							Title:          pr.Title,
 							LeadTime:       actualLeadTime,
 							TimeToMerge:    actualTimeToMerge,
+							StrLeadTime:    utilities.ConvertDurationToString(actualLeadTime),
+							StrTimeToMerge: utilities.ConvertDurationToString(actualTimeToMerge),
 							CreatedAt:      pullRequestDetails.CreatedAt,
 							Comments:       pullRequestDetails.Comments,
 							ReviewComments: pullRequestDetails.ReviewComments,
@@ -188,8 +198,9 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 							Deletions:      pullRequestDetails.Deletions,
 							ChangedFiles:   pullRequestDetails.ChangedFiles,
 						}
+						updateTotals(&totalAggregation, prMetric)
 
-						prLeadTimes = append(prLeadTimes, leadTm)
+						prMetricsDetails = append(prMetricsDetails, prMetric)
 					}
 
 					if pr.CreatedAt.Before(startDate) {
@@ -205,15 +216,23 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 
 			spinLoader.Stop()
 
+			totalAggregation.StrLeadTime = utilities.ConvertDurationToString(totalAggregation.LeadTime)
+			totalAggregation.StrTimeToMerge = utilities.ConvertDurationToString(totalAggregation.TimeToMerge)
+			prMetrics := domain.PullRequestMetrics{
+				PRDetails: prMetricsDetails,
+				Total:     totalAggregation,
+				Average:   calculateAvgAggregation(utilities, len(prMetricsDetails), totalAggregation),
+			}
+
 			if printJson {
 				type jsonOutput struct {
-					NumOfPullRequests int                               `json:"num_of_pull_requests"`
-					PrMetrics         []domain.PullRequestMetricDetails `json:"pr_metrics"`
+					NumOfPullRequests int                         `json:"num_of_pull_requests"`
+					PrMetrics         domain.PullRequestMetrics `json:"data"`
 				}
 
 				jOut := jsonOutput{
-					NumOfPullRequests: len(prLeadTimes),
-					PrMetrics:         prLeadTimes,
+					NumOfPullRequests: len(prMetricsDetails),
+					PrMetrics:         prMetrics,
 				}
 
 				jsonBytes, err := json.Marshal(jOut)
@@ -224,9 +243,9 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 
 				fmt.Printf("%s\n", string(jsonBytes))
 			} else {
-				fmt.Printf("Number of pull requests : %v\n", len(prLeadTimes))
+				fmt.Printf("Number of pull requests : %v\n", len(prMetricsDetails))
 				fmt.Println()
-				tablePrinter.PrintPullRequestLeadTime(prLeadTimes)
+				tablePrinter.PrintPullRequestMetrics(prMetrics)
 			}
 
 			return nil
@@ -246,4 +265,31 @@ func validatePrStateAndGetDefault(cfg config.Config, prState string) string {
 	}
 
 	return cfg.Settings.PullRequestState
+}
+
+func updateTotals(totalData *domain.TotalAggregation, metricDetails domain.PullRequestMetricDetails) {
+	totalData.Comments       += metricDetails.Comments
+	totalData.ReviewComments += metricDetails.ReviewComments
+	totalData.Commits        += metricDetails.Commits
+	totalData.Additions      += metricDetails.Additions
+	totalData.Deletions      += metricDetails.Deletions
+	totalData.ChangedFiles   += metricDetails.ChangedFiles
+}
+
+func calculateAvgAggregation(utilities utilities, prCount int, totalData domain.TotalAggregation) domain.AverageAggregation {
+	avgLeadTime := time.Duration(totalData.LeadTime.Seconds()/float64(prCount)) * time.Second
+	avgTimeToMerge := time.Duration(totalData.TimeToMerge.Seconds()/float64(prCount)) * time.Second
+
+	return domain.AverageAggregation{
+		Comments:       float64(totalData.Comments)/float64(prCount),
+		ReviewComments: float64(totalData.ReviewComments)/float64(prCount),
+		Commits:        float64(totalData.Commits)/float64(prCount),
+		Additions:      float64(totalData.Additions)/float64(prCount),
+		Deletions:      float64(totalData.Deletions)/float64(prCount),
+		ChangedFiles:   float64(totalData.ChangedFiles)/float64(prCount),
+		LeadTime:       avgLeadTime,
+		TimeToMerge:    avgTimeToMerge,
+		StrLeadTime:    utilities.ConvertDurationToString(avgLeadTime),
+		StrTimeToMerge: utilities.ConvertDurationToString(avgTimeToMerge),
+	}
 }

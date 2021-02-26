@@ -2,8 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/eujoy/gitpr/internal/config"
 )
@@ -63,4 +65,19 @@ func (u *Utils) GetNextPageNumberOrExit(surveySelection string, currentPage int)
 	}
 
 	return 0, false
+}
+
+func (u *Utils) ConvertDurationToString(dur time.Duration) string {
+	if dur == time.Duration(0) {
+		return ""
+	}
+
+	days := int64(dur.Hours() / 24)
+	hours := int64(math.Mod(dur.Hours(), 24))
+	minutes := int64(math.Mod(dur.Minutes(), 60))
+	seconds := int64(math.Mod(dur.Seconds(), 60))
+
+	formattedDuration := fmt.Sprintf("%d days & %02d:%02d:%02d", days, hours, minutes, seconds)
+
+	return formattedDuration
 }

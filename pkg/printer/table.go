@@ -2,25 +2,10 @@ package printer
 
 import (
 	"fmt"
-	"math"
-	"os"
-	"time"
-
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"os"
 )
-
-type total struct {
-	comments       int
-	reviewComments int
-	commits        int
-	additions      int
-	deletions      int
-	changedFiles   int
-
-	leadTime time.Duration
-	timeToMerge time.Duration
-}
 
 // TablePrinter wraps the printout for models as table.
 type TablePrinter struct{}
@@ -84,33 +69,17 @@ func (t *TablePrinter) PrintPullRequest(pullRequests []domain.PullRequest) {
 	outputTable.Render()
 }
 
-// PrintPullRequestLeadTime prints pull requests lead time as table.
-func (t *TablePrinter) PrintPullRequestLeadTime(pullRequests []domain.PullRequestMetricDetails) {
-	totalData := total{}
-
+// PrintPullRequestMetrics prints pull request related metrics as table.
+func (t *TablePrinter) PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics) {
 	outputTable := table.NewWriter()
 	outputTable.SetOutputMirror(os.Stdout)
 	outputTable.AppendHeader(table.Row{"#", "Title", "Comments", "Review Comments", "Commits", "Additions", "Deletions", "Changed Files", "Lead Time", "Time to Merge", "Created At"})
 
-	for _, p := range pullRequests {
-		leadTime := ""
-		if p.LeadTime != time.Duration(0) {
-			totalData.leadTime += p.LeadTime
-			leadTime = convertDurationToString(p.LeadTime)
-		}
-
-		timeToMerge := ""
-		if p.TimeToMerge != time.Duration(0) {
-			totalData.timeToMerge += p.TimeToMerge
-			timeToMerge = convertDurationToString(p.TimeToMerge)
-		}
-
-		outputTable.AppendRow(table.Row{p.Number, p.Title, p.Comments, p.ReviewComments, p.Commits, p.Additions, p.Deletions, p.ChangedFiles, leadTime, timeToMerge, p.CreatedAt})
-
-		updateTotals(&totalData, p)
+	for _, p := range pullRequests.PRDetails {
+		outputTable.AppendRow(table.Row{p.Number, p.Title, p.Comments, p.ReviewComments, p.Commits, p.Additions, p.Deletions, p.ChangedFiles, p.StrLeadTime, p.StrTimeToMerge, p.CreatedAt})
 	}
 
-	totalRow, averageRow := getTotalAndAverageRows(len(pullRequests), totalData)
+	totalRow, averageRow := t.getTotalAndAverageRows(pullRequests.Total, pullRequests.Average)
 
 	outputTable.AppendSeparator()
 	outputTable.AppendRow(totalRow)
@@ -120,54 +89,32 @@ func (t *TablePrinter) PrintPullRequestLeadTime(pullRequests []domain.PullReques
 	outputTable.Render()
 }
 
-func updateTotals(totalData *total, metricDetails domain.PullRequestMetricDetails) {
-	totalData.comments       += metricDetails.Comments
-	totalData.reviewComments += metricDetails.ReviewComments
-	totalData.commits        += metricDetails.Commits
-	totalData.additions      += metricDetails.Additions
-	totalData.deletions      += metricDetails.Deletions
-	totalData.changedFiles   += metricDetails.ChangedFiles
-}
-
-func convertDurationToString(dur time.Duration) string {
-	days := int64(dur.Hours() / 24)
-	hours := int64(math.Mod(dur.Hours(), 24))
-	minutes := int64(math.Mod(dur.Minutes(), 60))
-	seconds := int64(math.Mod(dur.Seconds(), 60))
-
-	formattedDuration := fmt.Sprintf("%d days & %02d:%02d:%02d", days, hours, minutes, seconds)
-
-	return formattedDuration
-}
-
-func getTotalAndAverageRows(totalPullRequests int, totalData total) (table.Row, table.Row) {
-	totalPullRequestsFloat := float64(totalPullRequests)
-
+func (t *TablePrinter) getTotalAndAverageRows(totalData domain.TotalAggregation, averageData domain.AverageAggregation) (table.Row, table.Row) {
 	totalTableRow := table.Row{
 		"",
 		"Total",
-		totalData.comments,
-		totalData.reviewComments,
-		totalData.commits,
-		totalData.additions,
-		totalData.deletions,
-		totalData.changedFiles,
-		convertDurationToString(totalData.leadTime),
-		convertDurationToString(totalData.timeToMerge),
+		totalData.Comments,
+		totalData.ReviewComments,
+		totalData.Commits,
+		totalData.Additions,
+		totalData.Deletions,
+		totalData.ChangedFiles,
+		totalData.StrLeadTime,
+		totalData.StrTimeToMerge,
 		"",
 	}
 
 	averageTableRow := table.Row{
 		"",
 		"Average",
-		fmt.Sprintf("%.2f", float64(totalData.comments)/totalPullRequestsFloat),
-		fmt.Sprintf("%.2f", float64(totalData.reviewComments)/totalPullRequestsFloat),
-		fmt.Sprintf("%.2f", float64(totalData.commits)/totalPullRequestsFloat),
-		fmt.Sprintf("%.2f", float64(totalData.additions)/totalPullRequestsFloat),
-		fmt.Sprintf("%.2f", float64(totalData.deletions)/totalPullRequestsFloat),
-		fmt.Sprintf("%.2f", float64(totalData.changedFiles)/totalPullRequestsFloat),
-		"",
-		"",
+		fmt.Sprintf("%.2f", averageData.Comments),
+		fmt.Sprintf("%.2f", averageData.ReviewComments),
+		fmt.Sprintf("%.2f", averageData.Comments),
+		fmt.Sprintf("%.2f", averageData.Additions),
+		fmt.Sprintf("%.2f", averageData.Deletions),
+		fmt.Sprintf("%.2f", averageData.ChangedFiles),
+		averageData.StrLeadTime,
+		averageData.StrTimeToMerge,
 		"",
 	}
 
