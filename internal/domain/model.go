@@ -146,3 +146,10 @@ type PullRequestMetrics struct {
 	Total     TotalAggregation           `json:"total"`
 	Average   AverageAggregation         `jsom:"average"`
 }
+
+// PullRequestFlowRatio describes the flow ratio information for the pull requests.
+type PullRequestFlowRatio struct {
+	Created int    `json:"created"`
+	Merged  int    `json:"merged"`
+	Ratio   string `json:"ratio"`
+}

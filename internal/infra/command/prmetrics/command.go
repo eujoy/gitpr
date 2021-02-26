@@ -22,6 +22,7 @@ type repositoryService interface {
 }
 
 type tablePrinter interface {
+	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
 	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
 }
 
@@ -116,6 +117,8 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 			},
 		},
 		Action: func(c *cli.Context) error {
+			prFlowRatio := make(map[string]*domain.PullRequestFlowRatio)
+
 			var prMetricsDetails []domain.PullRequestMetricDetails
 			shallContinue := true
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
@@ -148,7 +151,33 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				}
 
 				for _, pr := range prResp.PullRequests {
+					createdAtStr := pr.CreatedAt.Format("2006-01-02")
+					mergedAtStr := ""
+
+					if pr.MergeCommitSha != "" {
+						if pr.MergedAt.After(startDate) && pr.MergedAt.Before(endDate) {
+							mergedAtStr = pr.MergedAt.Format("2006-01-02")
+							if _, ok := prFlowRatio[mergedAtStr]; !ok {
+								prFlowRatio[mergedAtStr] = &domain.PullRequestFlowRatio{
+									Created: 0,
+									Merged:  0,
+								}
+							}
+
+							prFlowRatio[mergedAtStr].Merged++
+						}
+					}
+					
 					if pr.CreatedAt.After(startDate) && pr.CreatedAt.Before(endDate) {
+						if _, ok := prFlowRatio[createdAtStr]; !ok {
+							prFlowRatio[createdAtStr] = &domain.PullRequestFlowRatio{
+								Created: 0,
+								Merged:  0,
+							}
+						}
+
+						prFlowRatio[createdAtStr].Created++
+
 						actualLeadTime := time.Duration(0)
 						if !pr.MergedAt.IsZero() {
 							actualLeadTime = pr.MergedAt.Sub(pr.CreatedAt)
@@ -214,8 +243,6 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				currentPage++
 			}
 
-			spinLoader.Stop()
-
 			totalAggregation.StrLeadTime = utilities.ConvertDurationToString(totalAggregation.LeadTime)
 			totalAggregation.StrTimeToMerge = utilities.ConvertDurationToString(totalAggregation.TimeToMerge)
 			prMetrics := domain.PullRequestMetrics{
@@ -224,15 +251,24 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				Average:   calculateAvgAggregation(utilities, len(prMetricsDetails), totalAggregation),
 			}
 
+			for _, fd := range prFlowRatio {
+				ratio := float64(fd.Created)/float64(fd.Merged)
+				fd.Ratio = fmt.Sprintf("%.2f", ratio)
+			}
+
+			spinLoader.Stop()
+
 			if printJson {
 				type jsonOutput struct {
-					NumOfPullRequests int                         `json:"num_of_pull_requests"`
-					PrMetrics         domain.PullRequestMetrics `json:"data"`
+					NumOfPullRequests int                                     `json:"num_of_pull_requests"`
+					PrMetrics         domain.PullRequestMetrics               `json:"data"`
+					PrFlowRatio       map[string]*domain.PullRequestFlowRatio `json:"flow_ratio"`
 				}
 
 				jOut := jsonOutput{
 					NumOfPullRequests: len(prMetricsDetails),
 					PrMetrics:         prMetrics,
+					PrFlowRatio:       prFlowRatio,
 				}
 
 				jsonBytes, err := json.Marshal(jOut)
@@ -246,6 +282,8 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				fmt.Printf("Number of pull requests : %v\n", len(prMetricsDetails))
 				fmt.Println()
 				tablePrinter.PrintPullRequestMetrics(prMetrics)
+				fmt.Println()
+				tablePrinter.PrintPullRequestFlowRatio(prFlowRatio)
 			}
 
 			return nil

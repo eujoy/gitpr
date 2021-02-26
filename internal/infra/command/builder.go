@@ -34,6 +34,7 @@ type repositoryService interface {
 type tablePrinter interface {
 	PrintRepos(repos []domain.Repository)
 	PrintPullRequest(pullRequests []domain.PullRequest)
+	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
 	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
 }
 

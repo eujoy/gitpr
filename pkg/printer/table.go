@@ -5,6 +5,7 @@ import (
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"os"
+	"sort"
 )
 
 // TablePrinter wraps the printout for models as table.
@@ -62,6 +63,28 @@ func (t *TablePrinter) PrintPullRequest(pullRequests []domain.PullRequest) {
 		}
 
 		outputTable.AppendRow(table.Row{p.Number, p.HtmlUrl, p.Title, p.Labels, p.State, approved, requestedChanges, total})
+	}
+
+	outputTable.AppendSeparator()
+	outputTable.SetStyle(table.StyleBold)
+	outputTable.Render()
+}
+
+// PrintPullRequestFlowRatio prints pull request flow ratio details as table.
+func (t *TablePrinter) PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio) {
+	outputTable := table.NewWriter()
+	outputTable.SetOutputMirror(os.Stdout)
+	outputTable.AppendHeader(table.Row{"Date", "Created", "Merged", "Ratio"})
+
+	dates := make([]string, 0, len(flowRatioData))
+	for k := range flowRatioData {
+		dates = append(dates, k)
+	}
+	sort.Strings(dates)
+
+	for _, d := range dates {
+		fd := flowRatioData[d]
+		outputTable.AppendRow(table.Row{d, fd.Created, fd.Merged, fd.Ratio})
 	}
 
 	outputTable.AppendSeparator()
