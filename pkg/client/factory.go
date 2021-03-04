@@ -8,7 +8,7 @@ import (
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/eujoy/gitpr/pkg/client/github"
-	githubhttp "github.com/eujoy/gitpr/pkg/client/github/http"
+	githubHttp "github.com/eujoy/gitpr/pkg/client/github/http"
 )
 
 // Client describes the functions that muse be implemented by any client of the factory.
@@ -32,7 +32,7 @@ type Factory struct {
 func NewFactory(useClient string, cfg config.Config) (*Factory, error) {
 	switch useClient {
 	case "github":
-		gcl := githubhttp.NewClient(&http.Client{Timeout: cfg.Clients.Github.Timeout * time.Second}, cfg)
+		gcl := githubHttp.NewClient(&http.Client{Timeout: cfg.Clients.Github.Timeout * time.Second}, cfg)
 		gr := github.NewResource(gcl)
 
 		return &Factory{client: gr}, nil

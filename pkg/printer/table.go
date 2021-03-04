@@ -2,10 +2,11 @@ package printer
 
 import (
 	"fmt"
-	"github.com/eujoy/gitpr/internal/domain"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"os"
 	"sort"
+
+	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 // TablePrinter wraps the printout for models as table.

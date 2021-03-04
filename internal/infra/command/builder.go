@@ -1,6 +1,8 @@
 package command
 
 import (
+	"time"
+
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/eujoy/gitpr/internal/infra/command/commitlist"
@@ -11,7 +13,6 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
 	"github.com/urfave/cli/v2"
-	"time"
 )
 
 type userReposService interface {

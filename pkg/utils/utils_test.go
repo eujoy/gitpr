@@ -24,7 +24,7 @@ func TestGetPageOptions(t *testing.T) {
 	cfg.Pagination.Previous = "Previous"
 	cfg.Pagination.Exit = "Exit"
 
-	utils := utils.New(cfg)
+	utilities := utils.New(cfg)
 
 	type input struct {
 		respLength  int
@@ -56,7 +56,7 @@ func TestGetPageOptions(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			actualPageOptions := utils.GetPageOptions(tc.input.respLength, tc.input.pageSize, tc.input.currentPage)
+			actualPageOptions := utilities.GetPageOptions(tc.input.respLength, tc.input.pageSize, tc.input.currentPage)
 
 			if !reflect.DeepEqual(tc.expected.pageOptions, actualPageOptions) {
 				t.Errorf("Expected to get '%v' as page options, but got '%v'", tc.expected.pageOptions, actualPageOptions)
@@ -71,7 +71,7 @@ func TestGetNextPageNumberOrExit(t *testing.T) {
 	cfg.Pagination.Previous = "Previous"
 	cfg.Pagination.Exit = "Exit"
 
-	utils := utils.New(cfg)
+	utilities := utils.New(cfg)
 
 	type input struct {
 		surveySelection string
@@ -111,7 +111,7 @@ func TestGetNextPageNumberOrExit(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			actualNewPage, actualShouldContinue := utils.GetNextPageNumberOrExit(tc.input.surveySelection, tc.input.currentPage)
+			actualNewPage, actualShouldContinue := utilities.GetNextPageNumberOrExit(tc.input.surveySelection, tc.input.currentPage)
 
 			if !reflect.DeepEqual(tc.expected.newPage, actualNewPage) {
 				t.Errorf("Expected to get '%v' as new page, but got '%v'", tc.expected.newPage, actualNewPage)
