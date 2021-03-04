@@ -8,6 +8,8 @@ type githubClient interface {
 	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
 	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
 	GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error)
+	GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error)
+	GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
@@ -41,6 +43,18 @@ func (r *Resource) GetDiffBetweenTags(authToken, repoOwner, repository, existing
 func (r *Resource) GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error) {
 	userRepos, err := r.githubClient.GetUserRepos(authToken, pageSize, pageNumber)
 	return userRepos, err
+}
+
+// GetPullRequestsCommits retrieves the commits of a specific pull request.
+func (r *Resource) GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error) {
+	pullRequestCommits, err := r.githubClient.GetPullRequestsCommits(authToken, repoOwner, repository, pullRequestNumber, pageSize, pageNumber)
+	return pullRequestCommits, err
+}
+
+// GetPullRequestsDetails retrieves the details of a specific pull request.
+func (r *Resource) GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error) {
+	pullRequestDetails, err := r.githubClient.GetPullRequestsDetails(authToken, repoOwner, repository, pullRequestNumber)
+	return pullRequestDetails, err
 }
 
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.

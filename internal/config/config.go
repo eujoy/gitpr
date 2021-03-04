@@ -22,6 +22,8 @@ type clients struct {
 type endpoints struct {
 	GetCommitDetails             string `yaml:"get_commit_details"`
 	GetDiffBetweenTags           string `yaml:"get_diff_between_tags"`
+	GetPullRequestCommits        string `yaml:"get_pull_request_commits"`
+	GetPullRequestDetails        string `yaml:"get_pull_request_details"`
 	GetReviewStatusOfPullRequest string `yaml:"get_review_status_of_pull_request"`
 	GetUserRepos                 string `yaml:"get_user_repos"`
 	GetUserPullRequestsForRepo   string `yaml:"get_user_pull_requests_for_repo"`

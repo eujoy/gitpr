@@ -69,8 +69,8 @@ func info(app *cli.App, cfg config.Config) {
 
 // startUpCliService runs the service as a cli tool.
 func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service, prSrv *pullrequests.Service, repoSrv *repository.Service) {
-	tp := printer.NewTablePrinter()
 	u := utils.New(cfg)
+	tp := printer.NewTablePrinter()
 
 	b := command.NewBuilder(cfg, urSrv, prSrv, repoSrv, tp, u)
 
@@ -81,6 +81,7 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 		Widget().
 		CommitList().
 		CreateRelease().
+		CreatedPullRequests().
 		GetCommands()
 
 	err := app.Run(os.Args)

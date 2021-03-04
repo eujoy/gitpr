@@ -34,7 +34,7 @@ func NewCmd(cfg config.Config, service service) *cli.Command {
     commitListCmd := cli.Command{
         Name:    "create-release",
         Aliases: []string{"cr"},
-        Usage:   "Retrieves and prints the list of commits between two provided tags or commits.",
+        Usage:   "Retrieves all the commits between two tags and creates a list of them to be used a release description..",
         Flags: []cli.Flag{
             &cli.StringFlag{
                 Name:        "auth_token",

@@ -6,10 +6,12 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/commitlist"
 	"github.com/eujoy/gitpr/internal/infra/command/createrelease"
 	"github.com/eujoy/gitpr/internal/infra/command/find"
+	"github.com/eujoy/gitpr/internal/infra/command/prmetrics"
 	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
 	"github.com/urfave/cli/v2"
+	"time"
 )
 
 type userReposService interface {
@@ -17,6 +19,8 @@ type userReposService interface {
 }
 
 type pullRequestsService interface {
+	GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error)
+	GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 }
 
@@ -30,12 +34,15 @@ type repositoryService interface {
 type tablePrinter interface {
 	PrintRepos(repos []domain.Repository)
 	PrintPullRequest(pullRequests []domain.PullRequest)
+	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
+	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
 }
 
 type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
 	GetNextPageNumberOrExit(surveySelection string, currentPage int) (int, bool)
+	ConvertDurationToString(dur time.Duration) string
 }
 
 // Builder describes the builder of the cli commands.
@@ -71,6 +78,14 @@ func (b *Builder) GetCommands() []*cli.Command {
 func (b *Builder) UserRepos() *Builder {
 	userReposCmd := userrepos.NewCmd(b.cfg, b.userReposService, b.tablePrinter, b.utils)
 	b.commands = append(b.commands, userReposCmd)
+
+	return b
+}
+
+// CreatedPullRequests retrieves the number pull requests in a repo that have been created during a specific time period.
+func (b *Builder) CreatedPullRequests() *Builder {
+	pullRequestsCmd := prmetrics.NewCmd(b.cfg, b.pullRequestsService, b.repositoryService, b.tablePrinter, b.utils)
+	b.commands = append(b.commands, pullRequestsCmd)
 
 	return b
 }

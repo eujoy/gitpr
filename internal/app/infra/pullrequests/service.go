@@ -7,6 +7,8 @@ import (
 )
 
 type resource interface {
+	GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error)
+	GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error)
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 }
@@ -23,12 +25,31 @@ func NewService(resource resource) *Service {
 	}
 }
 
+// GetPullRequestsCommits retrieves the commits of a specific pull request.
+func (s *Service) GetPullRequestsCommits(authToken, repoOwner, repository string, pullRequestNumber, pageSize, pageNumber int) ([]domain.Commit, error) {
+	pullRequestCommits, err := s.resource.GetPullRequestsCommits(authToken, repoOwner, repository, pullRequestNumber, pageSize, pageNumber)
+	if err != nil {
+		return []domain.Commit{}, err
+	}
+
+	return pullRequestCommits, nil
+}
+
+// GetPullRequestsDetails retrieves the details of a specific pull request.
+func (s *Service) GetPullRequestsDetails(authToken, repoOwner, repository string, pullRequestNumber int) (domain.PullRequest, error) {
+	pullRequestDetails, err := s.resource.GetPullRequestsDetails(authToken, repoOwner, repository, pullRequestNumber)
+	if err != nil {
+		return domain.PullRequest{}, err
+	}
+
+	return pullRequestDetails, nil
+}
+
 // GetPullRequestsOfRepository retrieves the pull requests for a specified repo.
 // @todo Improve performance of the flow.
 func (s *Service) GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error) {
 	pullRequests, err := s.resource.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, pageSize, pageNumber)
 	if err != nil {
-		// fmt.Println(err)
 		return domain.RepoPullRequestsResponse{}, err
 	}
 
