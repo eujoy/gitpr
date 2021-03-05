@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/flag"
 	"github.com/urfave/cli/v2"
 )
 
@@ -34,23 +35,19 @@ func NewCmd(cfg config.Config, userReposService userReposService, pullRequestsSe
 	var authToken string
 	// var pageSize  int
 
+	flagBuilder := flag.New(cfg)
+
 	findCmd := cli.Command{
 		Name:    "find",
 		Aliases: []string{"f"},
 		Usage:   "Find the pull requests of multiple user repositories.",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "auth_token, t",
-				Usage:       "Github authorization token.",
-				Value:       cfg.Clients.Github.Token.DefaultValue,
-				Destination: &authToken,
-				Required:    false,
-			},
-			//
-			// @todo Add a flag to allow providing a comma separated list of pull request creator(s)  - by survey.Input or by cli.Flag.
-			// @todo Add a flag to allow providing a comma separated list of pull request reviewer(s) - by survey.Input or by cli.Flag.
-			//
-		},
+		//
+		// @todo Add a flag to allow providing a comma separated list of pull request creator(s)  - by survey.Input or by cli.Flag.
+		// @todo Add a flag to allow providing a comma separated list of pull request reviewer(s) - by survey.Input or by cli.Flag.
+		//
+		Flags: flagBuilder.
+			AppendAuthFlag(&authToken).
+			GetFlags(),
 		Action: func(c *cli.Context) error {
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 

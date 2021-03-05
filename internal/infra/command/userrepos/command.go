@@ -9,6 +9,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/flag"
 	"github.com/urfave/cli/v2"
 )
 
@@ -31,26 +32,16 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 	var authToken string
 	var pageSize int
 
+	flagBuilder := flag.New(cfg)
+
 	userReposCmd := cli.Command{
 		Name:    "user-repos",
 		Aliases: []string{"u"},
 		Usage:   "Retrieves and prints the repos of an authenticated user.",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "auth_token, t",
-				Usage:       "Github authorization token.",
-				Value:       cfg.Clients.Github.Token.DefaultValue,
-				Destination: &authToken,
-				Required:    false,
-			},
-			&cli.IntFlag{
-				Name:        "page_size, s",
-				Usage:       "Size of each page to load.",
-				Value:       cfg.Settings.PageSize,
-				Destination: &pageSize,
-				Required:    false,
-			},
-		},
+		Flags: flagBuilder.
+			AppendAuthFlag(&authToken).
+			AppendPageSizeFlag(&pageSize).
+			GetFlags(),
 		Action: func(c *cli.Context) error {
 			var shallContinue bool
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
