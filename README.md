@@ -162,7 +162,6 @@ OPTIONS:
    --state value, -a value       State of the pull request. (default: "open")
    --start_date value, -f value  Start date of the time range to check. [Expected format: 'yyyy-mm-dd']
    --end_date value, -e value    End date of the time range to check. [Expected format: 'yyyy-mm-dd']
-   --page_size value, -s value   Size of each page to load. (default: 10)
    --print_json, --json          Define whether the output needs to be printed in json format. (default: false)
    --help, -h                    show help (default: false)
 ```
