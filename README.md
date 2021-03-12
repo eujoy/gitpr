@@ -8,7 +8,7 @@
 ## Usage of the script in general
 
 ```text
-[~/gitpr]$ go run cmd/gitpr/main.go
+[~/gitpr]$ go run cmd/gitpr/main.go -h
 NAME:
    GitPullRequests - CLI tool to check status of pull requests in github, get pull requests of users and extract metrics on them.
 
@@ -47,7 +47,7 @@ USAGE:
    main find [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value  Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value  Github authorization token. (default: "~")
    --help, -h                    show help (default: false)
 ```
 
@@ -62,7 +62,7 @@ USAGE:
    main pull-requests [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value  Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value  Github authorization token. (default: "~")
    --owner value, -o value       Owner of the repository to retrieve pull requests for.
    --repository value, -r value  Repository name to check.
    --base value, -b value        Base branch to check pull requests against. (default: "master")
@@ -82,7 +82,7 @@ USAGE:
    main user-repos [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value  Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value  Github authorization token. (default: "~")
    --page_size value, -s value   Size of each page to load. (default: 10)
    --help, -h                    show help (default: false)
 ```
@@ -98,7 +98,7 @@ USAGE:
    main widget [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value  Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value  Github authorization token. (default: "~")
    --help, -h                    show help (default: false)
 ```
 
@@ -113,7 +113,7 @@ USAGE:
    main commit-list [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value  Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value  Github authorization token. (default: "~")
    --owner value, -o value       Owner of the repository to retrieve pull requests for.
    --repository value, -r value  Repository name to check.
    --start_tag value             The starting tag/commit to compare against.
@@ -132,7 +132,7 @@ USAGE:
    main create-release [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value     Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value     Github authorization token. (default: "~")
    --owner value, -o value          Owner of the repository to retrieve pull requests for.
    --repository value, -r value     Repository name to check.
    --release_name value, -n value   Define the release name to be set. You can use a string pattern to set the place where the new release tag will be set. (default: "Release version : %v")
@@ -155,7 +155,7 @@ USAGE:
    main pr-metrics [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value, -t value  Github authorization token. (default: "ff11443c399f8ce81bb6d986069085e031c66bba")
+   --auth_token value, -t value  Github authorization token. (default: "~")
    --owner value, -o value       Owner of the repository to retrieve pull requests for.
    --repository value, -r value  Repository name to check.
    --base value, -b value        Base branch to check pull requests against. (default: "master")
