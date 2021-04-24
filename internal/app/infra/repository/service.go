@@ -25,6 +25,7 @@ type resource interface {
     CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
     GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
     GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
+    GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
 }
 
 // Service describes the user repositories service.
@@ -60,6 +61,12 @@ func (s *Service) GetDiffBetweenTags(authToken, repoOwner, repository, existingT
 func (s *Service) CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error {
     err := s.resource.CreateRelease(authToken, repoOwner, repository, tagName, draftRelease, name, body)
     return err
+}
+
+// GetReleaseList fetches the releases that have taken place in a repository.
+func (s *Service) GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error) {
+    releaseList, err := s.resource.GetReleaseList(authToken, repoOwner, repository, pageSize, pageNumber)
+    return releaseList, err
 }
 
 // PrintCommitList converts a list of commits to a checklist.

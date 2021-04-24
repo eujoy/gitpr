@@ -13,6 +13,7 @@ type githubClient interface {
 	GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState string, pageSize int, pageNumber int) (domain.RepoPullRequestsResponse, error)
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
+	GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
 }
 
 // Resource describes the github resource.
@@ -74,3 +75,10 @@ func (r *Resource) CreateRelease(authToken, repoOwner, repository, tagName strin
 	err := r.githubClient.CreateRelease(authToken, repoOwner, repository, tagName, draftRelease, name, body)
 	return err
 }
+
+// GetReleaseList fetches the releases that have taken place in a repository.
+func (r *Resource) GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error) {
+	releaseList, err := r.githubClient.GetReleaseList(authToken, repoOwner, repository, pageSize, pageNumber)
+	return releaseList, err
+}
+

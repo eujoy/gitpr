@@ -118,6 +118,20 @@ func (t *TablePrinter) PrintPullRequestMetrics(pullRequests domain.PullRequestMe
 	outputTable.Render()
 }
 
+// PrintReleaseReport prints release report details as table.
+func (t *TablePrinter) PrintReleaseReport(releaseReport domain.ReleaseReport) {
+	outputTable := table.NewWriter()
+	outputTable.SetOutputMirror(os.Stdout)
+	outputTable.AppendHeader(table.Row{"Label", "Value"})
+	outputTable.AppendRow(table.Row{"Draft", releaseReport.NumberOfDraftReleases})
+	outputTable.AppendRow(table.Row{"Created", releaseReport.NumberOfReleasesCreated})
+	outputTable.AppendRow(table.Row{"Published", releaseReport.NumberOfReleasesPublished})
+	outputTable.AppendSeparator()
+	outputTable.AppendRow(table.Row{"Ration", releaseReport.CreatedToPublishedRatio})
+	outputTable.SetStyle(table.StyleBold)
+	outputTable.Render()
+}
+
 func (t *TablePrinter) getTotalAndAverageRows(totalData domain.TotalAggregation, averageData domain.AverageAggregation) (table.Row, table.Row) {
 	totalTableRow := table.Row{
 		"",
