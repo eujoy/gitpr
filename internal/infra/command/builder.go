@@ -39,7 +39,7 @@ type tablePrinter interface {
 	PrintPullRequest(pullRequests []domain.PullRequest)
 	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
 	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
-	PrintReleaseReport(releaseReport domain.ReleaseReport)
+	PrintReleaseReport(releaseReport domain.ReleaseReport, captionText string)
 }
 
 type utilities interface {

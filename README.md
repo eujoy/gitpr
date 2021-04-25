@@ -166,6 +166,27 @@ OPTIONS:
    --help, -h                    show help (default: false)
 ```
 
+## Usage of `release-report` command
+
+```text
+[~/gitpr]$ go run cmd/gitpr/main.go release-report -h
+NAME:
+   main release-report - Retrieves the releases that were published and/or created within a time range for a repository and prints a report based on them.
+
+USAGE:
+   main release-report [command options] [arguments...]
+
+OPTIONS:
+   --auth_token value                                            Github authorization token. (default: "fe5ebfe0af1ab20975df781d1d542951b7511dd9")
+   --owner value                                                 Owner of the repository to retrieve pull requests for.
+   --repository value                                            Repository name to check.
+   --start_date value, -f value                                  Start date of the time range to check. [Expected format: 'yyyy-mm-dd']
+   --end_date value, -e value                                    End date of the time range to check. [Expected format: 'yyyy-mm-dd']
+   --default_version_pattern, --dvp                              Enables the default release version pattern to be used. (default pattern: ^(v[\d]+.[\d]+.[\d]+)$) (default: false)
+   --version_pattern_with_service_initials value, --vpwsi value  Enables the release version pattern that uses the provided number of letters for service initials to be used. [pattern format: ^(v[\d]+.[\d]+.[\d]+-(\w){numOfInitialLetters,numOfInitialLetters})$] (default: 0)
+   --help, -h                                                    show help (default: false)
+```
+
 ----
 
 # Definition
