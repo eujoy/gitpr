@@ -29,6 +29,7 @@ COMMANDS:
    commit-list, c      Retrieves and prints the list of commits between two provided tags or commits.
    create-release, cr  Retrieves all the commits between two tags and creates a list of them to be used a release description..
    pr-metrics, m       Retrieves and prints the number of pull requests for a repository that have been created during a specific time period as well as the lead time of those pull requests.
+   release-report, r   Retrieves the releases that were published and/or created within a time range for a repository and prints a report based on them.
    help, h             Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -63,8 +64,8 @@ USAGE:
 
 OPTIONS:
    --auth_token value, -t value  Github authorization token. (default: "~")
-   --owner value, -o value       Owner of the repository to retrieve pull requests for.
-   --repository value, -r value  Repository name to check.
+   --owner value, -o value       Owner of the repository to use.
+   --repository value, -r value  Repository name to use.
    --base value, -b value        Base branch to check pull requests against. (default: "master")
    --state value, -a value       State of the pull request. (default: "open")
    --page_size value, -s value   Size of each page to load. (default: 10)
@@ -114,8 +115,8 @@ USAGE:
 
 OPTIONS:
    --auth_token value, -t value  Github authorization token. (default: "~")
-   --owner value, -o value       Owner of the repository to retrieve pull requests for.
-   --repository value, -r value  Repository name to check.
+   --owner value, -o value       Owner of the repository to use.
+   --repository value, -r value  Repository name to use.
    --start_tag value             The starting tag/commit to compare against.
    --end_tag value               The ending/latest tag/commit to compare against. (default: "HEAD")
    --help, -h                    show help (default: false)
@@ -133,8 +134,8 @@ USAGE:
 
 OPTIONS:
    --auth_token value, -t value     Github authorization token. (default: "~")
-   --owner value, -o value          Owner of the repository to retrieve pull requests for.
-   --repository value, -r value     Repository name to check.
+   --owner value, -o value          Owner of the repository to use.
+   --repository value, -r value     Repository name to use.
    --release_name value, -n value   Define the release name to be set. You can use a string pattern to set the place where the new release tag will be set. (default: "Release version : %v")
    --latest_tag value, -l value     The latest tag to compare against.
    --release_tag value, -v value    Release tag to be used (and checked against if exists). (default: "HEAD")
@@ -156,8 +157,8 @@ USAGE:
 
 OPTIONS:
    --auth_token value, -t value  Github authorization token. (default: "~")
-   --owner value, -o value       Owner of the repository to retrieve pull requests for.
-   --repository value, -r value  Repository name to check.
+   --owner value, -o value       Owner of the repository to use.
+   --repository value, -r value  Repository name to use.
    --base value, -b value        Base branch to check pull requests against. (default: "master")
    --state value, -a value       State of the pull request. (default: "open")
    --start_date value, -f value  Start date of the time range to check. [Expected format: 'yyyy-mm-dd']
@@ -201,6 +202,9 @@ go run cmd/gitpr/main.go commit-list -o eujoy -r gitpr -s <from tag/commit> -e <
 go run cmd/gitpr/main.go create-release -o eujoy -r gitpr -l <previous version> -v <new version> -d -f
 go run cmd/gitpr/main.go create-release -o eujoy -r erbuilder -l v0.5.0 -v v0.7.5 -d -p "app/service"
 go run cmd/gitpr/main.go pr-metrics -o eujoy -r erbuilder --start_date "2021-01-01" --end_date "2021-03-05"
+go run cmd/gitpr/main.go release-report --o eujoy -r erbuilder --start_date "2021-01-01" --end_date "2021-01-31" --vpwsi 2
+go run cmd/gitpr/main.go release-report --o eujoy -r erbuilder --start_date "2021-01-01" --end_date "2021-01-31" --dvp
+go run cmd/gitpr/main.go release-report --o eujoy -r erbuilder --start_date "2021-01-01" --end_date "2021-01-31"
 ```
 
 ```shell
