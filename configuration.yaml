@@ -3,8 +3,8 @@ version: "3.3"
 application:
   author: "Angelos Giannis"
   name: "GitPullRequests"
-  usage: "CLI tool to check status of pull requests in github."
-  version: "0.0.1"
+  usage: "CLI tool to check status of pull requests in github, get pull requests of users and extract metrics on them."
+  version: "0.0.2"
 clients:
   github:
     api_url: "https://api.github.com"

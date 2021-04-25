@@ -8,6 +8,7 @@ import (
     "github.com/AlecAivazis/survey/v2"
     "github.com/eujoy/gitpr/internal/config"
     "github.com/eujoy/gitpr/internal/domain"
+    "github.com/eujoy/gitpr/internal/infra/flag"
     "github.com/urfave/cli/v2"
 )
 
@@ -31,81 +32,23 @@ func NewCmd(cfg config.Config, service service) *cli.Command {
 
     forceCreate := false
 
+    flagBuilder := flag.New(cfg)
+
     commitListCmd := cli.Command{
         Name:    "create-release",
         Aliases: []string{"cr"},
         Usage:   "Retrieves all the commits between two tags and creates a list of them to be used a release description..",
-        Flags: []cli.Flag{
-            &cli.StringFlag{
-                Name:        "auth_token",
-                Aliases:     []string{"t"},
-                Usage:       "Github authorization token.",
-                Value:       cfg.Clients.Github.Token.DefaultValue,
-                Destination: &authToken,
-                Required:    false,
-            },
-            &cli.StringFlag{
-                Name:        "owner",
-                Aliases:     []string{"o"},
-                Usage:       "Owner of the repository to retrieve pull requests for.",
-                Value:       "",
-                Destination: &repoOwner,
-                Required:    true,
-            },
-            &cli.StringFlag{
-                Name:        "repository",
-                Aliases:     []string{"r"},
-                Usage:       "Repository name to check.",
-                Value:       "",
-                Destination: &repository,
-                Required:    true,
-            },
-            &cli.StringFlag{
-                Name:        "release_name",
-                Aliases:     []string{"n"},
-                Usage:       "Define the release name to be set. You can use a string pattern to set the place where the new release tag will be set.",
-                Value:       "Release version : %v",
-                Destination: &releaseName,
-                Required:    false,
-            },
-            &cli.StringFlag{
-                Name:        "latest_tag",
-                Aliases:     []string{"l"},
-                Usage:       "The latest tag to compare against.",
-                Value:       "",
-                Destination: &latestTag,
-                Required:    true,
-            },
-            &cli.StringFlag{
-                Name:        "release_tag",
-                Aliases:     []string{"v"},
-                Usage:       "Repository name to check.",
-                Value:       "HEAD",
-                Destination: &releaseTag,
-                Required:    true,
-            },
-            &cli.BoolFlag{
-                Name:        "draft_release",
-                Aliases:     []string{"d"},
-                Usage:       "Defines if the release will be a draft or published. (default: false)",
-                Destination: &draftRelease,
-                Required:    false,
-            },
-            &cli.BoolFlag{
-                Name:        "force_create",
-                Aliases:     []string{"f"},
-                Usage:       "Forces the creation of the release without asking for confirmation. (default: false)",
-                Destination: &forceCreate,
-                Required:    false,
-            },
-            &cli.StringSliceFlag{
-                Name:        "check_pattern",
-                Aliases:     []string{"p"},
-                Usage:       "Define the pattern to check the files modified against.",
-                Destination: &checkPattern,
-                Required:    false,
-            },
-        },
+        Flags: flagBuilder.
+            AppendAuthFlag(&authToken).
+            AppendOwnerFlag(&repoOwner).
+            AppendRepositoryFlag(&repository).
+            AppendReleaseNameFlag(&releaseName).
+            AppendLatestTagFlag(&latestTag).
+            AppendReleaseTagFlag(&releaseTag).
+            AppendCheckPatternFlag(&checkPattern).
+            AppendDraftReleaseFlag(&draftRelease).
+            AppendForceCreateFlag(&forceCreate).
+            GetFlags(),
         Action: func(c *cli.Context) error {
             commitList, err := service.GetDiffBetweenTags(authToken, repoOwner, repository, latestTag, "HEAD")
             if err != nil {

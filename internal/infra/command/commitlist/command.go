@@ -6,6 +6,7 @@ import (
 
     "github.com/eujoy/gitpr/internal/config"
     "github.com/eujoy/gitpr/internal/domain"
+    "github.com/eujoy/gitpr/internal/infra/flag"
     "github.com/urfave/cli/v2"
 )
 
@@ -18,47 +19,19 @@ type service interface {
 func NewCmd(cfg config.Config, service service) *cli.Command {
     var authToken, repoOwner, repository, startTag, endTag string
 
+    flagBuilder := flag.New(cfg)
+
     commitListCmd := cli.Command{
         Name:    "commit-list",
         Aliases: []string{"c"},
         Usage:   "Retrieves and prints the list of commits between two provided tags or commits.",
-        Flags: []cli.Flag{
-            &cli.StringFlag{
-                Name:        "auth_token, t",
-                Usage:       "Github authorization token.",
-                Value:       cfg.Clients.Github.Token.DefaultValue,
-                Destination: &authToken,
-                Required:    false,
-            },
-            &cli.StringFlag{
-                Name:        "owner, o",
-                Usage:       "Owner of the repository to retrieve pull requests for.",
-                Value:       "",
-                Destination: &repoOwner,
-                Required:    true,
-            },
-            &cli.StringFlag{
-                Name:        "repository, r",
-                Usage:       "Repository name to check.",
-                Value:       "",
-                Destination: &repository,
-                Required:    true,
-            },
-            &cli.StringFlag{
-                Name:        "start_tag, s",
-                Usage:       "The starting tag/commit to compare against.",
-                Value:       "",
-                Destination: &startTag,
-                Required:    true,
-            },
-            &cli.StringFlag{
-                Name:        "end_tag, e",
-                Usage:       "The ending/latest tag/commit to compare against.",
-                Value:       "HEAD",
-                Destination: &endTag,
-                Required:    true,
-            },
-        },
+        Flags: flagBuilder.
+            AppendAuthFlag(&authToken).
+            AppendOwnerFlag(&repoOwner).
+            AppendRepositoryFlag(&repository).
+            AppendStartTagFlag(&startTag).
+            AppendEndTagFlag(&endTag).
+            GetFlags(),
         Action: func(c *cli.Context) error {
             commitList, err := service.GetDiffBetweenTags(authToken, repoOwner, repository, startTag, endTag)
             if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/flag"
 	"github.com/urfave/cli/v2"
 )
 
@@ -30,54 +31,20 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter, utili
 	var authToken, repoOwner, repository, baseBranch, prState string
 	var pageSize int
 
+	flagBuilder := flag.New(cfg)
+
 	pullRequestsCmd := cli.Command{
 		Name:    "pull-requests",
 		Aliases: []string{"p"},
 		Usage:   "Retrieves and prints all the pull requests of a user for a repository.",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "auth_token, t",
-				Usage:       "Github authorization token.",
-				Value:       cfg.Clients.Github.Token.DefaultValue,
-				Destination: &authToken,
-				Required:    false,
-			},
-			&cli.StringFlag{
-				Name:        "owner, o",
-				Usage:       "Owner of the repository to retrieve pull requests for.",
-				Value:       "",
-				Destination: &repoOwner,
-				Required:    true,
-			},
-			&cli.StringFlag{
-				Name:        "repository, r",
-				Usage:       "Repository name to check.",
-				Value:       "",
-				Destination: &repository,
-				Required:    true,
-			},
-			&cli.StringFlag{
-				Name:        "base, b",
-				Usage:       "Base branch to check pull requests against.",
-				Value:       cfg.Settings.BaseBranch,
-				Destination: &baseBranch,
-				Required:    false,
-			},
-			&cli.StringFlag{
-				Name:        "state, a",
-				Usage:       "State of the pull request.",
-				Value:       cfg.Settings.PullRequestState,
-				Destination: &prState,
-				Required:    false,
-			},
-			&cli.IntFlag{
-				Name:        "page_size, s",
-				Usage:       "Size of each page to load.",
-				Value:       cfg.Settings.PageSize,
-				Destination: &pageSize,
-				Required:    false,
-			},
-		},
+		Flags: flagBuilder.
+			AppendAuthFlag(&authToken).
+			AppendOwnerFlag(&repoOwner).
+			AppendRepositoryFlag(&repository).
+			AppendBaseFlag(&baseBranch).
+			AppendStateFlag(&prState).
+			AppendPageSizeFlag(&pageSize).
+			GetFlags(),
 		Action: func(c *cli.Context) error {
 			var shallContinue bool
 			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))

@@ -6,6 +6,7 @@ import (
 
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/flag"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"github.com/urfave/cli/v2"
@@ -23,19 +24,15 @@ type pullRequestService interface {
 func NewCmd(cfg config.Config, userReposService userReposService, pullRequestService pullRequestService) *cli.Command {
 	var authToken string
 
+	flagBuilder := flag.New(cfg)
+
 	widgetCmd := cli.Command{
 		Name:    "widget",
 		Aliases: []string{"w"},
 		Usage:   "Display a widget based terminal which will include all the details required.",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "auth_token, t",
-				Usage:       "Github authorization token.",
-				Value:       cfg.Clients.Github.Token.DefaultValue,
-				Destination: &authToken,
-				Required:    false,
-			},
-		},
+		Flags: flagBuilder.
+			AppendAuthFlag(&authToken).
+			GetFlags(),
 		Action: func(c *cli.Context) error {
 			app := tview.NewApplication()
 
