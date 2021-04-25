@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
+	"github.com/eujoy/gitpr/internal/infra/flag"
 	"github.com/urfave/cli/v2"
 )
 
@@ -39,62 +40,21 @@ func NewCmd(cfg config.Config, service service, tablePrinter tablePrinter) *cli.
 	var numOfInitialLetters int
 	var useVersionPatternWithServiceInitials string
 
+	flagBuilder := flag.New(cfg)
+
 	releaseReportCmd := cli.Command{
 		Name:    "release-report",
 		Aliases: []string{"r"},
 		Usage:   "Retrieves the releases that were published and/or created within a time range for a repository and prints a report based on them.",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "auth_token, t",
-				Usage:       "Github authorization token.",
-				Value:       cfg.Clients.Github.Token.DefaultValue,
-				Destination: &authToken,
-				Required:    false,
-			},
-			&cli.StringFlag{
-				Name:        "owner, o",
-				Usage:       "Owner of the repository to retrieve pull requests for.",
-				Value:       "",
-				Destination: &repoOwner,
-				Required:    true,
-			},
-			&cli.StringFlag{
-				Name:        "repository, r",
-				Usage:       "Repository name to check.",
-				Value:       "",
-				Destination: &repository,
-				Required:    true,
-			},
-			&cli.StringFlag{
-				Name:        "start_date",
-				Aliases:     []string{"f"},
-				Usage:       "Start date of the time range to check. [Expected format: 'yyyy-mm-dd']",
-				Destination: &startDateStr,
-				Required:    false,
-			},
-			&cli.StringFlag{
-				Name:        "end_date",
-				Aliases:     []string{"e"},
-				Usage:       "End date of the time range to check. [Expected format: 'yyyy-mm-dd']",
-				Destination: &endDateStr,
-				Required:    false,
-			},
-			&cli.BoolFlag{
-				Name:        "default_version_pattern",
-				Aliases:     []string{"dvp"},
-				Usage:       fmt.Sprintf("Enables the default release version pattern to be used. (default pattern: %v)", defaultVersionPattern),
-				Destination: &enableDefaultVersionPattern,
-				Required:    false,
-			},
-			&cli.IntFlag{
-				Name:        "version_pattern_with_service_initials",
-				Aliases:     []string{"vpwsi"},
-				Usage:       fmt.Sprintf("Enables the release version pattern that uses the provided number of letters for service initials to be used. [pattern format: %v]", versionPatternWithServiceInitials),
-				Value:       0,
-				Destination: &numOfInitialLetters,
-				Required:    false,
-			},
-		},
+		Flags: flagBuilder.
+			AppendAuthFlag(&authToken).
+			AppendOwnerFlag(&repoOwner).
+			AppendRepositoryFlag(&repository).
+			AppendStartDateFlag(&startDateStr).
+			AppendEndDateFlag(&endDateStr).
+			AppendDefaultVersionPatternFlag(&enableDefaultVersionPattern, defaultVersionPattern).
+			AppendVersionPatternWithServiceInitialsFlag(&numOfInitialLetters, versionPatternWithServiceInitials).
+			GetFlags(),
 		Action: func(c *cli.Context) error {
 			if numOfInitialLetters > 0 {
 				enableDefaultVersionPatternWithServiceInitials = true

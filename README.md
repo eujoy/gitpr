@@ -177,9 +177,9 @@ USAGE:
    main release-report [command options] [arguments...]
 
 OPTIONS:
-   --auth_token value                                            Github authorization token. (default: "fe5ebfe0af1ab20975df781d1d542951b7511dd9")
-   --owner value                                                 Owner of the repository to retrieve pull requests for.
-   --repository value                                            Repository name to check.
+   --auth_token value, -t value                                  Github authorization token. (default: "~")
+   --owner value, -o value                                       Owner of the repository to use.
+   --repository value, -r value                                  Repository name to use.
    --start_date value, -f value                                  Start date of the time range to check. [Expected format: 'yyyy-mm-dd']
    --end_date value, -e value                                    End date of the time range to check. [Expected format: 'yyyy-mm-dd']
    --default_version_pattern, --dvp                              Enables the default release version pattern to be used. (default pattern: ^(v[\d]+.[\d]+.[\d]+)$) (default: false)
