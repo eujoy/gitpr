@@ -9,11 +9,11 @@ To be able to properly use this tool, the following steps are required :
 
 * Clone this repository to your local environment.
 * Create a new `Personal Access Token` on github and include the scopes :
-    ** `repo` : Full control of private repositories
-    ** `admin:org` : Full control of orgs and teams, read and write org projects
+  * `repo` : Full control of private repositories
+  * `admin:org` : Full control of orgs and teams, read and write org projects
 * Make sure to enable SSO on your access token so allow the script to use it for repositories/organizations that have SSO enabled.
 * Create a new environmental variable to store the access token created :
-    **  `GITPR_GITHUB_AUTH_TOKEN=<your token>`
+  *  `GITPR_GITHUB_AUTH_TOKEN=<your token>`
 
 # Commands Usage
 
