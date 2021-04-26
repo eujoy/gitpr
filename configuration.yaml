@@ -16,6 +16,7 @@ clients:
       get_diff_between_tags: "/repos/{repoOwner}/{repository}/compare/{existingTag}...{newTag}"
       get_pull_request_commits: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/commits?per_page={pageSize}&page={pageNumber}"
       get_pull_request_details: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}"
+      get_release_list: "/repos/{repoOwner}/{repository}/releases?per_page={pageSize}&page={pageNumber}"
       get_review_status_of_pull_request: "/repos/{repoOwner}/{repository}/pulls/{pullRequestNumber}/reviews"
       get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"
       get_user_pull_requests_for_repo: "/repos/{repoOwner}/{repository}/pulls?state={prState}&per_page={pageSize}&page={pageNumber}&{baseBranch}&sort=created&direction=desc"

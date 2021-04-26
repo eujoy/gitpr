@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 // Repository describes the required details to keep for a repo.
 type Repository struct {
@@ -152,4 +155,37 @@ type PullRequestFlowRatio struct {
 	Created int    `json:"created"`
 	Merged  int    `json:"merged"`
 	Ratio   string `json:"ratio"`
+}
+
+// Release describes the release details.
+type Release struct {
+	ID          int       `json:"id"`
+	Url         string    `json:"url"`
+	HtmlUrl     string    `json:"html_url"`
+	TagName     string    `json:"tag_name"`
+	Name        string    `json:"name"`
+	Body        string    `json:"body"`
+	Draft       bool      `json:"draft"`
+	PreRelease  bool      `json:"prerelease"`
+	CreatedAt   time.Time `json:"created_at"`
+	PublishedAt time.Time `json:"published_at"`
+}
+
+// ReleaseReport describes the fields to generate reports for releases.
+type ReleaseReport struct {
+	NumberOfDraftReleases     int     `json:"number_of_draft_releases"`
+	NumberOfPreReleases       int     `json:"number_of_pre_releases"`
+	NumberOfReleasesCreated   int     `json:"number_of_releases_created"`
+	NumberOfReleasesPublished int     `json:"number_of_releases_published"`
+
+	CreatedToPublishedRatio   float64 `json:"created_to_published_ratio"`
+}
+
+// CalculateRatioFields of the release report.
+func (rr *ReleaseReport) CalculateRatioFields() {
+	if rr.NumberOfReleasesPublished > 0 {
+		rr.CreatedToPublishedRatio = math.Round((float64(rr.NumberOfReleasesCreated)/float64(rr.NumberOfReleasesPublished))*100) / 100
+	} else {
+		rr.CreatedToPublishedRatio = float64(rr.NumberOfReleasesCreated)
+	}
 }

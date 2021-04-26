@@ -1,6 +1,8 @@
 package flag
 
 import (
+    "fmt"
+
     "github.com/eujoy/gitpr/internal/config"
     "github.com/urfave/cli/v2"
 )
@@ -48,7 +50,7 @@ func (b *builder) AppendOwnerFlag(destination *string) *builder {
         &cli.StringFlag{
             Name:        "owner",
             Aliases:     []string{"o"},
-            Usage:       "Owner of the repository to retrieve pull requests for.",
+            Usage:       "Owner of the repository to use.",
             Value:       "",
             Destination: destination,
             Required:    true,
@@ -65,7 +67,7 @@ func (b *builder) AppendRepositoryFlag(destination *string) *builder {
         &cli.StringFlag{
             Name:        "repository",
             Aliases:     []string{"r"},
-            Usage:       "Repository name to check.",
+            Usage:       "Repository name to use.",
             Value:       "",
             Destination: destination,
             Required:    true,
@@ -259,6 +261,23 @@ func (b *builder) AppendPageSizeFlag(destination *int) *builder {
     return b
 }
 
+// AppendVersionPatternWithServiceInitials appends the 'version_pattern_with_service_initials' flag in the flag list.
+func (b *builder) AppendVersionPatternWithServiceInitialsFlag(destination *int, versionPatternWithServiceInitials string) *builder {
+    b.flagDefinition = append(
+        b.flagDefinition,
+        &cli.IntFlag{
+            Name:        "version_pattern_with_service_initials",
+            Aliases:     []string{"vpwsi"},
+            Usage:       fmt.Sprintf("Enables the release version pattern that uses the provided number of letters for service initials to be used. [pattern format: %v]", versionPatternWithServiceInitials),
+            Value:       0,
+            Destination: destination,
+            Required:    false,
+        },
+    )
+
+    return b
+}
+
 // AppendPrintJsonFlag appends the 'print_json' flag in the flag list.
 func (b *builder) AppendPrintJsonFlag(destination *bool) *builder {
     b.flagDefinition = append(
@@ -302,6 +321,23 @@ func (b *builder) AppendForceCreateFlag(destination *bool) *builder {
             Name:        "force_create",
             Aliases:     []string{"f"},
             Usage:       "Forces the creation of the release without asking for confirmation. (default: false)",
+            Destination: destination,
+            HasBeenSet:  false,
+            Required:    false,
+        },
+    )
+
+    return b
+}
+
+// AppendDefaultVersionPatternFlag appends the 'default_version_pattern' flag in the flag list.
+func (b *builder) AppendDefaultVersionPatternFlag(destination *bool, defaultVersionPattern string) *builder {
+    b.flagDefinition = append(
+        b.flagDefinition,
+        &cli.BoolFlag{
+            Name:        "default_version_pattern",
+            Aliases:     []string{"dvp"},
+            Usage:       fmt.Sprintf("Enables the default release version pattern to be used. (default pattern: %v)", defaultVersionPattern),
             Destination: destination,
             HasBeenSet:  false,
             Required:    false,

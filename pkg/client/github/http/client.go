@@ -224,6 +224,28 @@ func (c *Client) CreateRelease(authToken, repoOwner, repository, tagName string,
 	return err
 }
 
+// GetReleaseList fetches the releases that have taken place in a repository.
+func (c *Client) GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.GetReleaseList)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
+	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return []domain.Release{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var releaseList []domain.Release
+	err = c.getResponse(req, &releaseList, nil)
+
+	return releaseList, err
+}
+
 // getResponse makes the actual request and converts the response to the respective required format.
 // Also, it parses the meta data in case it is required.
 func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.Meta) error {

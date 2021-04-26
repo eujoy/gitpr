@@ -10,6 +10,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/find"
 	"github.com/eujoy/gitpr/internal/infra/command/prmetrics"
 	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
+	"github.com/eujoy/gitpr/internal/infra/command/releasereport"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
 	"github.com/urfave/cli/v2"
@@ -29,6 +30,7 @@ type repositoryService interface {
 	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
 	GetDiffBetweenTags(authToken, repoOwner, repository, existingTag, latestTag string) (domain.CompareTagsResponse, error)
+	GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
 	PrintCommitList(commitList []domain.Commit, useTmpl string) (string, error)
 }
 
@@ -37,6 +39,7 @@ type tablePrinter interface {
 	PrintPullRequest(pullRequests []domain.PullRequest)
 	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
 	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
+	PrintReleaseReport(releaseReport domain.ReleaseReport, captionText string)
 }
 
 type utilities interface {
@@ -128,6 +131,14 @@ func (b *Builder) CommitList() *Builder {
 func (b *Builder) CreateRelease() *Builder {
 	createReleaseCmd := createrelease.NewCmd(b.cfg, b.repositoryService)
 	b.commands = append(b.commands, createReleaseCmd)
+
+	return b
+}
+
+// ReleaseReport is used to fetch the releases for a desired period and based on the provided pattern to prepare reports.
+func (b *Builder) ReleaseReport() *Builder {
+	releaseReportCmd := releasereport.NewCmd(b.cfg, b.repositoryService, b.tablePrinter)
+	b.commands = append(b.commands, releaseReportCmd)
 
 	return b
 }
