@@ -244,6 +244,55 @@ func (b *builder) AppendCheckPatternFlag(destination *cli.StringSlice) *builder 
     return b
 }
 
+// AppendSpreadsheetID appends the 'spreadsheet_id' flag in the flag list.
+func (b *builder) AppendSpreadsheetID(destination *string) *builder {
+    b.flagDefinition = append(
+        b.flagDefinition,
+        &cli.StringFlag{
+            Name:        "spreadsheet_id",
+            Aliases:     []string{"sid"},
+            Usage:       "Define the id of the spreadsheet to publish the data to.",
+            Destination: destination,
+            Required:    true,
+        },
+    )
+
+    return b
+}
+
+// AppendSheetName appends the 'sheet_name' flag in the flag list.
+func (b *builder) AppendSheetName(destination *string) *builder {
+    b.flagDefinition = append(
+        b.flagDefinition,
+        &cli.StringFlag{
+            Name:        "sheet_name",
+            Aliases:     []string{"sheet"},
+            Usage:       "Define the name of the sheet to store the report data to. By default, it will be 'OverallData-{repositoryName}'",
+            Value:       "",
+            Destination: destination,
+            Required:    false,
+        },
+    )
+
+    return b
+}
+
+// AppendSprintSummary appends the 'sprint_summary' flag in the flag list.
+func (b *builder) AppendSprintSummary(destination *string) *builder {
+    b.flagDefinition = append(
+        b.flagDefinition,
+        &cli.StringFlag{
+            Name:        "sprint_summary",
+            Aliases:     []string{"sprints"},
+            Usage:       "Define the summary level details of the sprints to take into account. Expecting json formatted array of sprint summary details. Example : [{\"number\":1,\"name\":\"My Sprint 1\",\"start_date\":\"2020-08-03\",\"end_date\":\"2020-08-17\"},{\"number\":2,\"name\":\"My Sprint 2\",\"start_date\":\"2020-09-08\",\"end_date\":\"2020-09-22\"}]",
+            Destination: destination,
+            Required:    true,
+        },
+    )
+
+    return b
+}
+
 // AppendPageSizeFlag appends the 'page_size' flag in the flag list.
 func (b *builder) AppendPageSizeFlag(destination *int) *builder {
     b.flagDefinition = append(

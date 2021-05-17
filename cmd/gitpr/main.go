@@ -14,6 +14,7 @@ import (
 	internalHttp "github.com/eujoy/gitpr/internal/infra/route/http"
 	"github.com/eujoy/gitpr/pkg/client"
 	"github.com/eujoy/gitpr/pkg/printer"
+	"github.com/eujoy/gitpr/pkg/publish"
 	"github.com/eujoy/gitpr/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -72,7 +73,13 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 	u := utils.New(cfg)
 	tp := printer.NewTablePrinter()
 
-	b := command.NewBuilder(cfg, urSrv, prSrv, repoSrv, tp, u)
+	googleSheetsService, err := publish.NewGoogleSheetsService()
+	if err != nil {
+		fmt.Printf("Failed to prepare google sheets service with error: %v\n", err)
+		os.Exit(1)
+	}
+
+	b := command.NewBuilder(cfg, urSrv, prSrv, repoSrv, tp, u, googleSheetsService)
 
 	app.Commands = b.
 		Find().
@@ -83,9 +90,10 @@ func startUpCliService(app *cli.App, cfg config.Config, urSrv *userrepos.Service
 		CreateRelease().
 		CreatedPullRequests().
 		ReleaseReport().
+		PublishPullRequestMetrics().
 		GetCommands()
 
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		fmt.Printf("Error running the service : %v\n", err)
 		os.Exit(1)

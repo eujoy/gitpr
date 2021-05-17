@@ -1,20 +1,20 @@
-package prmetrics
+package publishmetrics
 
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/eujoy/gitpr/internal/infra/flag"
-
 	"github.com/urfave/cli/v2"
 )
 
 const (
 	defaultPageSize = 20
+	sheetNameDefaultTemplate = "OverallData-{repositoryName}"
 )
 
 type pullRequestService interface {
@@ -39,74 +39,137 @@ type utilities interface {
 	ConvertDurationToString(dur time.Duration) string
 }
 
+type googleSheetsService interface{
+	CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error
+	WritePullRequestReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, prMetrics *domain.PullRequestMetrics, prFlowRatio *domain.PullRequestFlowRatio) error
+}
+
 // NewCmd creates a new command to retrieve pull requests for a repo.
-func NewCmd(cfg config.Config, pullRequestService pullRequestService, repositoryService repositoryService, tablePrinter tablePrinter, utilities utilities) *cli.Command {
+func NewCmd(cfg config.Config, pullRequestService pullRequestService, repositoryService repositoryService, tablePrinter tablePrinter, utilities utilities, googleSheetsService googleSheetsService) *cli.Command {
 	var authToken, repoOwner, repository, baseBranch, prState string
-	var startDateStr, endDateStr string
-	var printJson bool
+	var spreadsheetID, sheetName, sprintSummary string
 
 	flagBuilder := flag.New(cfg)
 
 	pullRequestsCmd := cli.Command{
-		Name:    "pr-metrics",
-		Aliases: []string{"m"},
-		Usage:   "Retrieves and prints the number of pull requests for a repository that have been created during a specific time period as well as the lead time of those pull requests.",
+		Name:    "publish-metrics",
+		Aliases: []string{"pm"},
+		Usage:   "Retrieves the metric details for a list of sprints, prepares the report information for each one of them and publishes the report data the provided google spreadsheet.",
 		Flags: flagBuilder.
 			AppendAuthFlag(&authToken).
 			AppendOwnerFlag(&repoOwner).
 			AppendRepositoryFlag(&repository).
 			AppendBaseFlag(&baseBranch).
 			AppendStateFlag(&prState).
-			AppendStartDateFlag(&startDateStr).
-			AppendEndDateFlag(&endDateStr).
-			AppendPrintJsonFlag(&printJson).
+			AppendSpreadsheetID(&spreadsheetID).
+			AppendSheetName(&sheetName).
+			AppendSprintSummary(&sprintSummary).
 			GetFlags(),
 		Action: func(c *cli.Context) error {
-			prFlowRatio := make(map[string]*domain.PullRequestFlowRatio)
+			fmt.Println("Starting the process...")
 
-			var prMetricsDetails []domain.PullRequestMetricDetails
 			shallContinue := true
-			spinLoader := spinner.New(spinner.CharSets[cfg.Spinner.Type], cfg.Spinner.Time*time.Millisecond, spinner.WithHiddenCursor(cfg.Spinner.HideCursor))
 
-			startDate, startDateParseErr := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%v 00:00:00", startDateStr))
-			if startDateParseErr != nil {
-				fmt.Printf("Failed to parse date %q with error : %v\n", startDateStr, startDateParseErr)
+			if sheetName == "" {
+				sheetName = strings.Replace(sheetNameDefaultTemplate, "{repositoryName}", repository, -1)
 			}
 
-			endDate, endDateParseErr := time.Parse("2006-01-02 15:04:05", fmt.Sprintf("%v 23:59:59", endDateStr))
-			if startDateParseErr != nil {
-				fmt.Printf("Failed to parse date %q with error : %v\n", endDateStr, endDateParseErr)
+			err := googleSheetsService.CreateAndCleanupOverallSheet(spreadsheetID, sheetName)
+			if err != nil {
+				fmt.Println(err)
+				return err
 			}
 
-			totalAggregation := domain.TotalAggregation{
-				LeadTime:       time.Duration(0),
-				TimeToMerge:    time.Duration(0),
+			var sprintSummaryList []domain.SprintSummary
+			err = json.Unmarshal([]byte(sprintSummary), &sprintSummaryList)
+			if err != nil {
+				fmt.Println(err)
+				return err
 			}
 
+			var cleanedSummaryList []domain.SprintSummary
+			var startAt, endAt time.Time
+			for _, sprint := range sprintSummaryList {
+				fmt.Printf("Cleanup of sprint with number : %v\n", sprint.Number)
+
+				if !sprint.StartDate.IsZero() && !sprint.EndDate.IsZero() {
+					cleanedSummaryList = append(cleanedSummaryList, sprint)
+
+					if startAt.IsZero() || startAt.After(sprint.StartDate.Time) {
+						startAt = sprint.StartDate.Time
+					}
+
+					if endAt.IsZero() || endAt.Before(sprint.EndDate.Time) {
+						endAt = sprint.EndDate.Time
+					}
+				}
+			}
+
+			pullRequestListPerDay := make(map[string][]domain.PullRequest)
 			prState = validatePrStateAndGetDefault(cfg, prState)
 			currentPage := 1
 			for {
-				spinLoader.Start()
+				fmt.Printf("Fetch pull requests for page : %v\n", currentPage)
 
 				prResp, err := pullRequestService.GetPullRequestsOfRepository(authToken, repoOwner, repository, baseBranch, prState, defaultPageSize, currentPage)
 				if err != nil {
-					spinLoader.Stop()
 					fmt.Println(err)
 					return err
 				}
 
 				if len(prResp.PullRequests) == 0 {
-					spinLoader.Stop()
 					fmt.Println("Retrieved empty list.")
 					break
 				}
 
+				fmt.Printf("Moving pull requests from response to the map - number of pull requests : %v\n", len(prResp.PullRequests))
 				for _, pr := range prResp.PullRequests {
+					createdAtStr := pr.CreatedAt.Format("2006-01-02")
+
+					pullRequestListPerDay[createdAtStr] = append(pullRequestListPerDay[createdAtStr], pr)
+
+					if pr.CreatedAt.Before(startAt) {
+						shallContinue = false
+					}
+				}
+
+				if !shallContinue {
+					break
+				}
+				currentPage++
+			}
+
+			for _, sprint := range cleanedSummaryList {
+				var prMetricsDetails []domain.PullRequestMetricDetails
+
+				fmt.Printf("Prepare report data for sprint with number : %v\n", sprint.Number)
+
+				var prsInSprint []domain.PullRequest
+				currentDate := sprint.StartDate.Time
+				for {
+					fmt.Printf("Combine all pull requests for sprint - current date is : %v\n", currentDate.Format("2006-01-02"))
+
+					prsInSprint = append(prsInSprint, pullRequestListPerDay[currentDate.Format("2006-01-02")]...)
+					currentDate = currentDate.Add(24 * time.Hour)
+					if currentDate.After(sprint.EndDate.Time) {
+						break
+					}
+				}
+
+				prFlowRatio := make(map[string]*domain.PullRequestFlowRatio)
+				totalAggregation := domain.TotalAggregation{
+					LeadTime:       time.Duration(0),
+					TimeToMerge:    time.Duration(0),
+				}
+
+				for _, pr := range prsInSprint {
+					fmt.Printf("Prepare report for sprint with id : %v\n", pr.ID)
+
 					createdAtStr := pr.CreatedAt.Format("2006-01-02")
 					mergedAtStr := ""
 
 					if pr.MergeCommitSha != "" {
-						if pr.MergedAt.After(startDate) && pr.MergedAt.Before(endDate) {
+						if pr.MergedAt.After(sprint.StartDate.Time) && pr.MergedAt.Before(sprint.EndDate.Time) {
 							mergedAtStr = pr.MergedAt.Format("2006-01-02")
 							if _, ok := prFlowRatio[mergedAtStr]; !ok {
 								prFlowRatio[mergedAtStr] = &domain.PullRequestFlowRatio{
@@ -118,8 +181,8 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 							prFlowRatio[mergedAtStr].Merged++
 						}
 					}
-					
-					if pr.CreatedAt.After(startDate) && pr.CreatedAt.Before(endDate) {
+
+					if pr.CreatedAt.After(sprint.StartDate.Time) && pr.CreatedAt.Before(sprint.EndDate.Time) {
 						if _, ok := prFlowRatio[createdAtStr]; !ok {
 							prFlowRatio[createdAtStr] = &domain.PullRequestFlowRatio{
 								Created: 0,
@@ -135,16 +198,18 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 							totalAggregation.LeadTime += actualLeadTime
 						}
 
+						fmt.Printf("Fetch pull request details for sprint with id : %v\n", pr.ID)
+
 						pullRequestDetails, err := pullRequestService.GetPullRequestsDetails(authToken, repoOwner, repository, pr.Number)
 						if err != nil {
-							spinLoader.Stop()
 							fmt.Println(err)
 							return err
 						}
 
+						fmt.Printf("Fetch pull request first commit for sprint with id : %v\n", pr.ID)
+
 						firstCommitsList, err := pullRequestService.GetPullRequestsCommits(authToken, repoOwner, repository, pr.Number, 1, 1)
 						if err != nil {
-							spinLoader.Stop()
 							fmt.Printf("Failed to get details of first commit with error : %v\n", err)
 							return err
 						}
@@ -152,9 +217,10 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 						actualTimeToMerge := time.Until(firstCommitsList[0].Details.Committer.Date)
 
 						if pullRequestDetails.MergeCommitSha != "" {
+							fmt.Printf("Fetch pull request last commit for sprint with id : %v\n", pr.ID)
+
 							lastCommit, err := repositoryService.GetCommitDetails(authToken, repoOwner, repository, pullRequestDetails.MergeCommitSha)
 							if err != nil {
-								spinLoader.Stop()
 								fmt.Printf("Failed to get details of last commit with error : %v\n", err)
 								return err
 							}
@@ -182,71 +248,40 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 
 						prMetricsDetails = append(prMetricsDetails, prMetric)
 					}
-
-					if pr.CreatedAt.Before(startDate) {
-						shallContinue = false
-					}
 				}
 
-				if !shallContinue {
-					break
-				}
-				currentPage++
-			}
-
-			totalAggregation.StrLeadTime = utilities.ConvertDurationToString(totalAggregation.LeadTime)
-			totalAggregation.StrTimeToMerge = utilities.ConvertDurationToString(totalAggregation.TimeToMerge)
-			prMetrics := domain.PullRequestMetrics{
-				PRDetails: prMetricsDetails,
-				Total:     totalAggregation,
-				Average:   calculateAvgAggregation(utilities, len(prMetricsDetails), totalAggregation),
-			}
-
-			totalCreated := 0
-			totalMerged := 0
-			for _, fd := range prFlowRatio {
-				totalCreated += fd.Created
-				totalMerged += fd.Merged
-
-				ratio := float64(fd.Created)/float64(fd.Merged)
-				fd.Ratio = fmt.Sprintf("%.2f", ratio)
-			}
-
-			prFlowRatio["Summary"] = &domain.PullRequestFlowRatio{
-				Created: totalCreated,
-				Merged:  totalMerged,
-				Ratio:   fmt.Sprintf("%.2f", float64(totalCreated)/float64(totalMerged)),
-			}
-
-			spinLoader.Stop()
-
-			if printJson {
-				type jsonOutput struct {
-					NumOfPullRequests int                                     `json:"num_of_pull_requests"`
-					PrMetrics         domain.PullRequestMetrics               `json:"data"`
-					PrFlowRatio       map[string]*domain.PullRequestFlowRatio `json:"flow_ratio"`
+				totalAggregation.StrLeadTime = utilities.ConvertDurationToString(totalAggregation.LeadTime)
+				totalAggregation.StrTimeToMerge = utilities.ConvertDurationToString(totalAggregation.TimeToMerge)
+				prMetrics := &domain.PullRequestMetrics{
+					PRDetails: prMetricsDetails,
+					Total:     totalAggregation,
+					Average:   calculateAvgAggregation(utilities, len(prMetricsDetails), totalAggregation),
 				}
 
-				jOut := jsonOutput{
-					NumOfPullRequests: len(prMetricsDetails),
-					PrMetrics:         prMetrics,
-					PrFlowRatio:       prFlowRatio,
+				totalCreated := 0
+				totalMerged := 0
+				for _, fd := range prFlowRatio {
+					totalCreated += fd.Created
+					totalMerged += fd.Merged
+
+					ratio := float64(fd.Created)/float64(fd.Merged)
+					fd.Ratio = fmt.Sprintf("%.2f", ratio)
 				}
 
-				jsonBytes, err := json.Marshal(jOut)
+				prFlowRatio["Summary"] = &domain.PullRequestFlowRatio{
+					Created: totalCreated,
+					Merged:  totalMerged,
+					Ratio:   fmt.Sprintf("%.2f", float64(totalCreated)/float64(totalMerged)),
+				}
+
+				err = googleSheetsService.WritePullRequestReportData(spreadsheetID, sheetName, fmt.Sprintf("A%d", sprint.Number+1), &sprint, prMetrics, prFlowRatio["Summary"])
 				if err != nil {
-					fmt.Printf("Failed to generate json with error : %v", err)
+					fmt.Printf("Failed to write report for pull requests for sprint with error : %v\n", err)
 					return err
 				}
-
-				fmt.Printf("%s\n", string(jsonBytes))
-			} else {
-				fmt.Printf("Number of pull requests : %v\n", len(prMetricsDetails))
-				fmt.Println()
-				tablePrinter.PrintPullRequestMetrics(prMetrics)
-				fmt.Println()
-				tablePrinter.PrintPullRequestFlowRatio(prFlowRatio)
 			}
+
+			fmt.Println("Finished process successfully!!")
 
 			return nil
 		},
