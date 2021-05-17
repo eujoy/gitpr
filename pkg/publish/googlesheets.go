@@ -19,11 +19,6 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-const (
-	isLaterAddedTrue  = "Yes"
-	isLaterAddedFalse = "No"
-)
-
 // GoogleSheetsService describes the google sheets wrapper service.
 type GoogleSheetsService struct {
 	*sheets.Service
@@ -63,48 +58,6 @@ func NewGoogleSheetsService() (*GoogleSheetsService, error) {
 
 	return &GoogleSheetsService{srv}, nil
 }
-
-// WriteTicketInformationToSpreadsheet write all the ticket information alongside the respective details for the report
-// in the sprint specific sheet alongside the respective information to the overall sheet.
-// func (s *Service) WriteTicketInformationToSpreadsheet(
-// 	spreadsheetID string,
-// 	sheetName string,
-// 	overallSheetName string,
-// 	ticketDetails map[string][]*domain.Ticket,
-// 	ticketDetailsMapKeys []string,
-// 	reportData *domain.Report,
-// ) error {
-// 	err := s.CreateAndCleanupSheet(spreadsheetID, sheetName)
-// 	if err != nil {
-// 		fmt.Printf("Failed to create spreadsheet if it does not exist and clean it up wit error : %v\n", err)
-// 		return err
-// 	}
-//
-// 	startingPoint := 1
-// 	for _, state := range ticketDetailsMapKeys {
-// 		err := s.WriteTicketList(spreadsheetID, sheetName, fmt.Sprintf("A%d", startingPoint), state, ticketDetails[state])
-// 		if err != nil {
-// 			fmt.Printf("Error writing ticket information in spreadsheet: %v\n", err)
-// 			return err
-// 		}
-//
-// 		startingPoint += len(ticketDetails[state]) + 4
-// 	}
-//
-// 	err = s.WriteReportData(spreadsheetID, sheetName, "M1", reportData)
-// 	if err != nil {
-// 		fmt.Printf("Error writing report data in spreadsheet: %v\n", err)
-// 		return err
-// 	}
-//
-// 	err = s.WriteReportDataInOverall(spreadsheetID, overallSheetName, fmt.Sprintf("A%d", reportData.SprintNumber+1), reportData)
-// 	if err != nil {
-// 		fmt.Printf("Error writing report data in overall data sheet in spreadsheet: %v\n", err)
-// 		return err
-// 	}
-//
-// 	return nil
-// }
 
 // WriteOverallSheetHeader in the provided overall data sheet. This function shall be used only in case the overall data sheet does not exist.
 func (s *GoogleSheetsService) WriteOverallSheetHeader(spreadsheetID string, sheetName string) error {
@@ -320,6 +273,9 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 		}()
 
 		err = json.NewDecoder(f).Decode(tok)
+		if err != nil {
+			log.Fatalf("Failed to decode with error : %v", err)
+		}
 	}
 
 	return tok, err
