@@ -260,14 +260,31 @@ func (b *builder) AppendSpreadsheetID(destination *string) *builder {
     return b
 }
 
-// AppendSheetName appends the 'sheet_name' flag in the flag list.
-func (b *builder) AppendSheetName(destination *string) *builder {
+// AppendPullRequestSheetName appends the 'sheet_name' flag in the flag list.
+func (b *builder) AppendPullRequestSheetName(destination *string) *builder {
     b.flagDefinition = append(
         b.flagDefinition,
         &cli.StringFlag{
-            Name:        "sheet_name",
-            Aliases:     []string{"sheet"},
-            Usage:       "Define the name of the sheet to store the report data to. By default, it will be 'OverallData-{repositoryName}'",
+            Name:        "pr_sheet_name",
+            Aliases:     []string{"pr_sheet"},
+            Usage:       "Define the name of the sheet to store the report data for pull requests to. By default, it will be 'OverallData-{repositoryName}'",
+            Value:       "",
+            Destination: destination,
+            Required:    false,
+        },
+    )
+
+    return b
+}
+
+// AppendReleaseSheetName appends the 'sheet_name' flag in the flag list.
+func (b *builder) AppendReleaseSheetName(destination *string) *builder {
+    b.flagDefinition = append(
+        b.flagDefinition,
+        &cli.StringFlag{
+            Name:        "rel_sheet_name",
+            Aliases:     []string{"rel_sheet"},
+            Usage:       "Define the name of the sheet to store the report data for releases to. By default, it will be 'Release-{repositoryName}'",
             Value:       "",
             Destination: destination,
             Required:    false,

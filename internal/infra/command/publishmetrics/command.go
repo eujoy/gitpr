@@ -3,6 +3,8 @@ package publishmetrics
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,8 +15,12 @@ import (
 )
 
 const (
-	defaultPageSize = 20
-	sheetNameDefaultTemplate = "OverallData-{repositoryName}"
+	defaultPageSize                     = 20
+	pullRequestSheetNameDefaultTemplate = "OverallData-{repositoryName}"
+	releaseSheetNameDefaultTemplate     = "Release-{repositoryName}"
+
+	defaultVersionPattern             = "^(v[\\d]+.[\\d]+.[\\d]+)$"
+	versionPatternWithServiceInitials = "^(v[\\d]+.[\\d]+.[\\d]+-(\\w){numOfInitialLetters,numOfInitialLetters})$"
 )
 
 type pullRequestService interface {
@@ -25,6 +31,7 @@ type pullRequestService interface {
 
 type repositoryService interface {
 	GetCommitDetails(authToken, repoOwner, repository, commitSha string) (domain.Commit, error)
+	GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
 }
 
 type tablePrinter interface {
@@ -41,13 +48,20 @@ type utilities interface {
 
 type googleSheetsService interface{
 	CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error
+	CreateAndCleanupReleaseOverallSheet(spreadsheetID string, sheetName string) error
 	WritePullRequestReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, prMetrics *domain.PullRequestMetrics, prFlowRatio *domain.PullRequestFlowRatio) error
+	WriteReleaseReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, releaseTagType string, releaseReport *domain.ReleaseReport) error
 }
 
 // NewCmd creates a new command to retrieve pull requests for a repo.
 func NewCmd(cfg config.Config, pullRequestService pullRequestService, repositoryService repositoryService, tablePrinter tablePrinter, utilities utilities, googleSheetsService googleSheetsService) *cli.Command {
 	var authToken, repoOwner, repository, baseBranch, prState string
-	var spreadsheetID, sheetName, sprintSummary string
+	var spreadsheetID, prSheetName, sprintSummary, relSheetName string
+
+	var enableDefaultVersionPattern bool
+	var enableDefaultVersionPatternWithServiceInitials bool
+	var numOfInitialLetters int
+	var useVersionPatternWithServiceInitials string
 
 	flagBuilder := flag.New(cfg)
 
@@ -62,19 +76,37 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 			AppendBaseFlag(&baseBranch).
 			AppendStateFlag(&prState).
 			AppendSpreadsheetID(&spreadsheetID).
-			AppendSheetName(&sheetName).
+			AppendPullRequestSheetName(&prSheetName).
+			AppendReleaseSheetName(&relSheetName).
 			AppendSprintSummary(&sprintSummary).
+			AppendDefaultVersionPatternFlag(&enableDefaultVersionPattern, defaultVersionPattern).
+			AppendVersionPatternWithServiceInitialsFlag(&numOfInitialLetters, versionPatternWithServiceInitials).
 			GetFlags(),
 		Action: func(c *cli.Context) error {
 			fmt.Println("Starting the process...")
 
-			shallContinue := true
-
-			if sheetName == "" {
-				sheetName = strings.Replace(sheetNameDefaultTemplate, "{repositoryName}", repository, -1)
+			if numOfInitialLetters > 0 {
+				enableDefaultVersionPatternWithServiceInitials = true
+				useVersionPatternWithServiceInitials = strings.Replace(versionPatternWithServiceInitials, "numOfInitialLetters", strconv.Itoa(numOfInitialLetters), -1)
 			}
 
-			err := googleSheetsService.CreateAndCleanupOverallSheet(spreadsheetID, sheetName)
+			shallContinue := true
+
+			if prSheetName == "" {
+				prSheetName = strings.Replace(pullRequestSheetNameDefaultTemplate, "{repositoryName}", repository, -1)
+			}
+
+			if relSheetName == "" {
+				relSheetName = strings.Replace(releaseSheetNameDefaultTemplate, "{repositoryName}", repository, -1)
+			}
+
+			err := googleSheetsService.CreateAndCleanupOverallSheet(spreadsheetID, prSheetName)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+
+			err = googleSheetsService.CreateAndCleanupReleaseOverallSheet(spreadsheetID, prSheetName)
 			if err != nil {
 				fmt.Println(err)
 				return err
@@ -274,10 +306,160 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 					Ratio:   fmt.Sprintf("%.2f", float64(totalCreated)/float64(totalMerged)),
 				}
 
-				err = googleSheetsService.WritePullRequestReportData(spreadsheetID, sheetName, fmt.Sprintf("A%d", sprint.Number+1), &sprint, prMetrics, prFlowRatio["Summary"])
+				err = googleSheetsService.WritePullRequestReportData(spreadsheetID, prSheetName, fmt.Sprintf("A%d", sprint.Number+1), &sprint, prMetrics, prFlowRatio["Summary"])
 				if err != nil {
 					fmt.Printf("Failed to write report for pull requests for sprint with error : %v\n", err)
 					return err
+				}
+			}
+
+			fmt.Println("Fetch information about the releases.")
+
+			releaseList := make(map[string][]domain.Release)
+			currentPage = 1
+			for {
+				currentReleaseListPage, err := repositoryService.GetReleaseList(authToken, repoOwner, repository, 10, currentPage)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+
+				if len(currentReleaseListPage) == 0 {
+					break
+				}
+
+				needToBreak := false
+				for _, rel := range currentReleaseListPage {
+					if rel.CreatedAt.After(startAt) && rel.CreatedAt.Before(endAt) {
+						createdAtStr := rel.CreatedAt.Format("2006-01-02")
+						releaseList[createdAtStr] = append(releaseList[createdAtStr], rel)
+						continue
+					} else {
+						if rel.PublishedAt.After(startAt) && rel.PublishedAt.Before(endAt) {
+							publishedAtStr := rel.PublishedAt.Format("2006-01-02")
+							releaseList[publishedAtStr] = append(releaseList[publishedAtStr], rel)
+							continue
+						}
+					}
+
+					if rel.CreatedAt.Before(startAt) && rel.PublishedAt.Before(endAt) {
+						needToBreak = true
+					}
+				}
+
+				if needToBreak {
+					break
+				}
+
+				currentPage++
+			}
+
+			for _, sprint := range cleanedSummaryList {
+				var relList []domain.Release
+
+				fmt.Printf("Prepare release report data for sprint with number : %v\n", sprint.Number)
+
+				currentDate := sprint.StartDate.Time
+				for {
+					fmt.Printf("Combine all releases for sprint - current date is : %v\n", currentDate.Format("2006-01-02"))
+
+					relList = append(relList, releaseList[currentDate.Format("2006-01-02")]...)
+					currentDate = currentDate.Add(24 * time.Hour)
+					if currentDate.After(sprint.EndDate.Time) {
+						break
+					}
+				}
+
+				validDefaultReleaseVersion := regexp.MustCompile(defaultVersionPattern)
+				validDefaultReleaseVersionWithServiceInitials := regexp.MustCompile(useVersionPatternWithServiceInitials)
+
+				if enableDefaultVersionPatternWithServiceInitials {
+					releaseReportMap := make(map[string]*domain.ReleaseReport)
+					for _, rel := range relList {
+						if validDefaultReleaseVersionWithServiceInitials.MatchString(rel.TagName) {
+							tagNameSlice := strings.Split(rel.TagName, "-")
+							serviceInitials := tagNameSlice[1]
+
+							if _, ok := releaseReportMap[serviceInitials]; !ok {
+								releaseReportMap[tagNameSlice[1]] = &domain.ReleaseReport{
+									NumberOfDraftReleases:     0,
+									NumberOfReleasesCreated:   0,
+									NumberOfReleasesPublished: 0,
+									CreatedToPublishedRatio:   0.0,
+								}
+							}
+
+							if rel.Draft {
+								releaseReportMap[serviceInitials].NumberOfDraftReleases++
+							}
+
+							if rel.PreRelease {
+								releaseReportMap[serviceInitials].NumberOfDraftReleases++
+							}
+
+							if rel.CreatedAt.After(sprint.StartDate.Time) && rel.CreatedAt.Before(sprint.EndDate.Time) {
+								releaseReportMap[serviceInitials].NumberOfReleasesCreated++
+							}
+
+							if rel.PublishedAt.After(sprint.StartDate.Time) && rel.PublishedAt.Before(sprint.EndDate.Time) {
+								releaseReportMap[serviceInitials].NumberOfReleasesPublished++
+							}
+						}
+					}
+
+					extraLine := 0
+					for serviceInitials, releaseReport := range releaseReportMap {
+						releaseReport.CalculateRatioFields()
+
+						err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, "A1", &sprint, serviceInitials, releaseReport)
+						// err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, fmt.Sprintf("A%d", (sprint.Number*len(releaseReportMap)) + 1 + extraLine), &sprint, serviceInitials, releaseReport)
+						if err != nil {
+							fmt.Printf("Failed to write release report data to spreadsheet with error : %v", err)
+							return err
+						}
+
+						extraLine++
+					}
+				} else {
+					releaseReport := &domain.ReleaseReport{
+						NumberOfDraftReleases:     0,
+						NumberOfReleasesCreated:   0,
+						NumberOfReleasesPublished: 0,
+						CreatedToPublishedRatio:   0.0,
+					}
+
+					for _, rel := range relList {
+						if enableDefaultVersionPattern {
+							if !validDefaultReleaseVersion.MatchString(rel.TagName) {
+								continue
+							}
+						}
+
+						if rel.Draft {
+							releaseReport.NumberOfDraftReleases++
+						}
+
+						if rel.PreRelease {
+							releaseReport.NumberOfDraftReleases++
+						}
+
+						if rel.CreatedAt.After(sprint.StartDate.Time) && rel.CreatedAt.Before(sprint.EndDate.Time) {
+							releaseReport.NumberOfReleasesCreated++
+						}
+
+						if rel.PublishedAt.After(sprint.StartDate.Time) && rel.PublishedAt.Before(sprint.EndDate.Time) {
+							releaseReport.NumberOfReleasesPublished++
+						}
+					}
+
+					releaseReport.CalculateRatioFields()
+
+					err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, "A1", &sprint, "", releaseReport)
+					// err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, fmt.Sprintf("A%d", sprint.Number+1), &sprint, "", releaseReport)
+					if err != nil {
+						fmt.Printf("Failed to write release report data to spreadsheet with error : %v", err)
+						return err
+					}
 				}
 			}
 

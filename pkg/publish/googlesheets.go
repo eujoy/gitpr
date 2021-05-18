@@ -138,7 +138,7 @@ func (s *GoogleSheetsService) WritePullRequestReportData(spreadsheetID string, s
 			convertDurationToHourDecimal(prMetrics.Average.TimeToMerge),
 			prFlowRatio.Created,
 			prFlowRatio.Merged,
-			prFlowRatio.Ratio,
+			convertStringToFloatWithTwoDecimals(prFlowRatio.Ratio),
 		},
 	}
 
@@ -153,7 +153,70 @@ func (s *GoogleSheetsService) WritePullRequestReportData(spreadsheetID string, s
 	return nil
 }
 
-// CreateAndCleanupOverallSheet checks if the overall sheet exists, create it if it doesn't exist and add the respective header line.
+// WriteReleaseOverallSheetHeader in the provided release overall data sheet. This function shall be used only in case the overall data sheet does not exist.
+func (s *GoogleSheetsService) WriteReleaseOverallSheetHeader(spreadsheetID string, sheetName string) error {
+	var vr sheets.ValueRange
+
+	rangeInSheet := fmt.Sprintf("%v!A1", sheetName)
+
+	listOfValues := [][]interface{}{
+		{
+			"#",
+			"Sprint Name",
+			"Start Date",
+			"End Date",
+			"Type",
+			"Draft",
+			"Pre-Releases",
+			"Created",
+			"Published",
+		},
+	}
+
+	vr.Values = listOfValues
+
+	_, err := s.Spreadsheets.Values.Update(spreadsheetID, rangeInSheet, &vr).ValueInputOption("RAW").Do()
+	if err != nil {
+		fmt.Printf("Failed to write data in spreadsheet with error: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// WriteReleaseReportData to the provided spreadsheet.
+func (s *GoogleSheetsService) WriteReleaseReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, releaseTagType string, releaseReport *domain.ReleaseReport) error {
+	var vr sheets.ValueRange
+
+	rangeInSheet := fmt.Sprintf("%v!%v", sheetName, cellRange)
+
+	listOfValues := [][]interface{}{
+		{
+			sprint.Number,
+			sprint.Name,
+			sprint.StartDate.Format("2006-01-02"),
+			sprint.EndDate.Format("2006-01-02"),
+			releaseTagType,
+			releaseReport.NumberOfDraftReleases,
+			releaseReport.NumberOfPreReleases,
+			releaseReport.NumberOfReleasesCreated,
+			releaseReport.NumberOfReleasesPublished,
+			releaseReport.CreatedToPublishedRatio,
+		},
+	}
+
+	vr.Values = listOfValues
+
+	_, err := s.Spreadsheets.Values.Append(spreadsheetID, rangeInSheet, &vr).ValueInputOption("RAW").Do()
+	if err != nil {
+		fmt.Printf("Failed to write data in spreadsheet with error: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// CreateAndCleanupOverallSheet checks if the overall sheet exists, creates it if it doesn't exist and add the respective header line.
 func (s *GoogleSheetsService) CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error {
 	sheetExists, err := s.CheckIfSheetExists(spreadsheetID, sheetName)
 	if err != nil {
@@ -172,6 +235,33 @@ func (s *GoogleSheetsService) CreateAndCleanupOverallSheet(spreadsheetID string,
 	}
 
 	err = s.WriteOverallSheetHeader(spreadsheetID, sheetName)
+	if err != nil {
+		fmt.Printf("Error to write the header line in overall data sheet %q in spreadsheet: %v\n", sheetName, err)
+		return err
+	}
+
+	return nil
+}
+
+// CreateAndCleanupReleaseOverallSheet checks if the overall sheet for releases exists, creates it if it doesn't and add the respective header line.
+func (s *GoogleSheetsService) CreateAndCleanupReleaseOverallSheet(spreadsheetID string, sheetName string) error {
+	sheetExists, err := s.CheckIfSheetExists(spreadsheetID, sheetName)
+	if err != nil {
+		fmt.Printf("Error checking if sheet exists in spreadsheet: %v\n", err)
+		return err
+	}
+
+	if sheetExists {
+		return nil
+	}
+
+	err = s.CreateSheet(spreadsheetID, sheetName)
+	if err != nil {
+		fmt.Printf("Error creating the sheet %q in spreadsheet: %v\n", sheetName, err)
+		return err
+	}
+
+	err = s.WriteReleaseOverallSheetHeader(spreadsheetID, sheetName)
 	if err != nil {
 		fmt.Printf("Error to write the header line in overall data sheet %q in spreadsheet: %v\n", sheetName, err)
 		return err
@@ -306,6 +396,15 @@ func saveToken(path string, token *oauth2.Token) {
 
 func convertToFloatWithTwoDecimals(inputVal float64) float64 {
 	outputVal, err := strconv.ParseFloat(fmt.Sprintf("%.2f", inputVal), 64)
+	if err != nil {
+		return 0.0
+	}
+
+	return outputVal
+}
+
+func convertStringToFloatWithTwoDecimals(inputVal string) float64 {
+	outputVal, err := strconv.ParseFloat(inputVal, 64)
 	if err != nil {
 		return 0.0
 	}

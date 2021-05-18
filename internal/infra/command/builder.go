@@ -52,7 +52,9 @@ type utilities interface {
 
 type googleSheetsService interface{
 	CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error
+	CreateAndCleanupReleaseOverallSheet(spreadsheetID string, sheetName string) error
 	WritePullRequestReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, prMetrics *domain.PullRequestMetrics, prFlowRatio *domain.PullRequestFlowRatio) error
+	WriteReleaseReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, releaseTagType string, releaseReport *domain.ReleaseReport) error
 }
 
 // Builder describes the builder of the cli commands.
