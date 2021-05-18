@@ -412,7 +412,6 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 						releaseReport.CalculateRatioFields()
 
 						err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, "A1", &sprint, serviceInitials, releaseReport)
-						// err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, fmt.Sprintf("A%d", (sprint.Number*len(releaseReportMap)) + 1 + extraLine), &sprint, serviceInitials, releaseReport)
 						if err != nil {
 							fmt.Printf("Failed to write release report data to spreadsheet with error : %v", err)
 							return err
@@ -455,7 +454,6 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 					releaseReport.CalculateRatioFields()
 
 					err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, "A1", &sprint, "", releaseReport)
-					// err = googleSheetsService.WriteReleaseReportData(spreadsheetID, relSheetName, fmt.Sprintf("A%d", sprint.Number+1), &sprint, "", releaseReport)
 					if err != nil {
 						fmt.Printf("Failed to write release report data to spreadsheet with error : %v", err)
 						return err
