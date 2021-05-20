@@ -145,7 +145,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 						firstCommitsList, err := pullRequestService.GetPullRequestsCommits(authToken, repoOwner, repository, pr.Number, 1, 1)
 						if err != nil {
 							spinLoader.Stop()
-							fmt.Printf("Failed to get detials of first commit with error : %v\n", err)
+							fmt.Printf("Failed to get details of first commit with error : %v\n", err)
 							return err
 						}
 
@@ -155,7 +155,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 							lastCommit, err := repositoryService.GetCommitDetails(authToken, repoOwner, repository, pullRequestDetails.MergeCommitSha)
 							if err != nil {
 								spinLoader.Stop()
-								fmt.Printf("Failed to get detials of last commit with error : %v\n", err)
+								fmt.Printf("Failed to get details of last commit with error : %v\n", err)
 								return err
 							}
 

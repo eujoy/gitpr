@@ -9,6 +9,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/createrelease"
 	"github.com/eujoy/gitpr/internal/infra/command/find"
 	"github.com/eujoy/gitpr/internal/infra/command/prmetrics"
+	"github.com/eujoy/gitpr/internal/infra/command/publishmetrics"
 	"github.com/eujoy/gitpr/internal/infra/command/pullrequests"
 	"github.com/eujoy/gitpr/internal/infra/command/releasereport"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
@@ -49,6 +50,13 @@ type utilities interface {
 	ConvertDurationToString(dur time.Duration) string
 }
 
+type googleSheetsService interface{
+	CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error
+	CreateAndCleanupReleaseOverallSheet(spreadsheetID string, sheetName string) error
+	WritePullRequestReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, prMetrics *domain.PullRequestMetrics, prFlowRatio *domain.PullRequestFlowRatio) error
+	WriteReleaseReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, releaseTagType string, releaseReport *domain.ReleaseReport) error
+}
+
 // Builder describes the builder of the cli commands.
 type Builder struct {
 	commands            []*cli.Command
@@ -58,10 +66,11 @@ type Builder struct {
 	repositoryService   repositoryService
 	tablePrinter        tablePrinter
 	utils               utilities
+	googleSheets        googleSheetsService
 }
 
 // NewBuilder creates and returns a new command builder.
-func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities) *Builder {
+func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities, googleSheets googleSheetsService) *Builder {
 	return &Builder{
 		commands:            []*cli.Command{},
 		cfg:                 cfg,
@@ -70,6 +79,7 @@ func NewBuilder(cfg config.Config, userReposService userReposService, pullReques
 		repositoryService:   repositoryService,
 		tablePrinter:        tablePrinter,
 		utils:               utils,
+		googleSheets:        googleSheets,
 	}
 }
 
@@ -143,3 +153,10 @@ func (b *Builder) ReleaseReport() *Builder {
 	return b
 }
 
+// PublishPullRequestMetrics retrieves the metrics for pull requests and publishes them to google spreadsheets.
+func (b *Builder) PublishPullRequestMetrics() *Builder {
+	publishMetricsCmd := publishmetrics.NewCmd(b.cfg, b.pullRequestsService, b.repositoryService, b.tablePrinter, b.utils, b.googleSheets)
+	b.commands = append(b.commands, publishMetricsCmd)
+
+	return b
+}
