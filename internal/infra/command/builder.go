@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/eujoy/gitpr/internal/config"
@@ -14,6 +16,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/releasereport"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
+	"github.com/eujoy/gitpr/pkg/publish"
 	"github.com/urfave/cli/v2"
 )
 
@@ -70,7 +73,7 @@ type Builder struct {
 }
 
 // NewBuilder creates and returns a new command builder.
-func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities, googleSheets googleSheetsService) *Builder {
+func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities) *Builder {
 	return &Builder{
 		commands:            []*cli.Command{},
 		cfg:                 cfg,
@@ -79,7 +82,6 @@ func NewBuilder(cfg config.Config, userReposService userReposService, pullReques
 		repositoryService:   repositoryService,
 		tablePrinter:        tablePrinter,
 		utils:               utils,
-		googleSheets:        googleSheets,
 	}
 }
 
@@ -155,6 +157,14 @@ func (b *Builder) ReleaseReport() *Builder {
 
 // PublishPullRequestMetrics retrieves the metrics for pull requests and publishes them to google spreadsheets.
 func (b *Builder) PublishPullRequestMetrics() *Builder {
+	googleSheetsService, err := publish.NewGoogleSheetsService()
+	if err != nil {
+		fmt.Printf("Failed to prepare google sheets service with error: %v\n", err)
+		os.Exit(1)
+	}
+
+	b.googleSheets = googleSheetsService
+
 	publishMetricsCmd := publishmetrics.NewCmd(b.cfg, b.pullRequestsService, b.repositoryService, b.tablePrinter, b.utils, b.googleSheets)
 	b.commands = append(b.commands, publishMetricsCmd)
 
