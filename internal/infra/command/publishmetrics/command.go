@@ -11,6 +11,7 @@ import (
 	"github.com/eujoy/gitpr/internal/config"
 	"github.com/eujoy/gitpr/internal/domain"
 	"github.com/eujoy/gitpr/internal/infra/flag"
+	"github.com/eujoy/gitpr/pkg/publish"
 	"github.com/urfave/cli/v2"
 )
 
@@ -34,11 +35,6 @@ type repositoryService interface {
 	GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
 }
 
-type tablePrinter interface {
-	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
-	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
-}
-
 type utilities interface {
 	ClearTerminalScreen()
 	GetPageOptions(respLength int, pageSize int, currentPage int) []string
@@ -46,15 +42,8 @@ type utilities interface {
 	ConvertDurationToString(dur time.Duration) string
 }
 
-type googleSheetsService interface{
-	CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error
-	CreateAndCleanupReleaseOverallSheet(spreadsheetID string, sheetName string) error
-	WritePullRequestReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, prMetrics *domain.PullRequestMetrics, prFlowRatio *domain.PullRequestFlowRatio) error
-	WriteReleaseReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, releaseTagType string, releaseReport *domain.ReleaseReport) error
-}
-
 // NewCmd creates a new command to retrieve pull requests for a repo.
-func NewCmd(cfg config.Config, pullRequestService pullRequestService, repositoryService repositoryService, tablePrinter tablePrinter, utilities utilities, googleSheetsService googleSheetsService) *cli.Command {
+func NewCmd(cfg config.Config, pullRequestService pullRequestService, repositoryService repositoryService, utilities utilities) *cli.Command {
 	var authToken, repoOwner, repository, baseBranch, prState string
 	var spreadsheetID, prSheetName, sprintSummary, relSheetName string
 
@@ -85,6 +74,12 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 		Action: func(c *cli.Context) error {
 			fmt.Println("Starting the process...")
 
+			googleSheetsService, err := publish.NewGoogleSheetsService()
+			if err != nil {
+				fmt.Printf("Failed to prepare google sheets service with error: %v\n", err)
+				return err
+			}
+
 			if numOfInitialLetters > 0 {
 				enableDefaultVersionPatternWithServiceInitials = true
 				useVersionPatternWithServiceInitials = strings.Replace(versionPatternWithServiceInitials, "numOfInitialLetters", strconv.Itoa(numOfInitialLetters), -1)
@@ -100,7 +95,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				relSheetName = strings.Replace(releaseSheetNameDefaultTemplate, "{repositoryName}", repository, -1)
 			}
 
-			err := googleSheetsService.CreateAndCleanupOverallSheet(spreadsheetID, prSheetName)
+			err = googleSheetsService.CreateAndCleanupOverallSheet(spreadsheetID, prSheetName)
 			if err != nil {
 				fmt.Println(err)
 				return err

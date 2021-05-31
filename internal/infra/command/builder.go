@@ -1,8 +1,6 @@
 package command
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/eujoy/gitpr/internal/config"
@@ -16,7 +14,6 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/releasereport"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
-	"github.com/eujoy/gitpr/pkg/publish"
 	"github.com/urfave/cli/v2"
 )
 
@@ -53,13 +50,6 @@ type utilities interface {
 	ConvertDurationToString(dur time.Duration) string
 }
 
-type googleSheetsService interface{
-	CreateAndCleanupOverallSheet(spreadsheetID string, sheetName string) error
-	CreateAndCleanupReleaseOverallSheet(spreadsheetID string, sheetName string) error
-	WritePullRequestReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, prMetrics *domain.PullRequestMetrics, prFlowRatio *domain.PullRequestFlowRatio) error
-	WriteReleaseReportData(spreadsheetID string, sheetName string, cellRange string, sprint *domain.SprintSummary, releaseTagType string, releaseReport *domain.ReleaseReport) error
-}
-
 // Builder describes the builder of the cli commands.
 type Builder struct {
 	commands            []*cli.Command
@@ -69,7 +59,6 @@ type Builder struct {
 	repositoryService   repositoryService
 	tablePrinter        tablePrinter
 	utils               utilities
-	googleSheets        googleSheetsService
 }
 
 // NewBuilder creates and returns a new command builder.
@@ -157,15 +146,7 @@ func (b *Builder) ReleaseReport() *Builder {
 
 // PublishPullRequestMetrics retrieves the metrics for pull requests and publishes them to google spreadsheets.
 func (b *Builder) PublishPullRequestMetrics() *Builder {
-	googleSheetsService, err := publish.NewGoogleSheetsService()
-	if err != nil {
-		fmt.Printf("Failed to prepare google sheets service with error: %v\n", err)
-		os.Exit(1)
-	}
-
-	b.googleSheets = googleSheetsService
-
-	publishMetricsCmd := publishmetrics.NewCmd(b.cfg, b.pullRequestsService, b.repositoryService, b.tablePrinter, b.utils, b.googleSheets)
+	publishMetricsCmd := publishmetrics.NewCmd(b.cfg, b.pullRequestsService, b.repositoryService, b.utils)
 	b.commands = append(b.commands, publishMetricsCmd)
 
 	return b
