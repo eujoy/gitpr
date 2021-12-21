@@ -110,7 +110,7 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 			var sprintSummaryList []domain.SprintSummary
 			err = json.Unmarshal([]byte(sprintSummary), &sprintSummaryList)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("Failed to parse sprint summary list with error : %v\n", err)
 				return err
 			}
 
@@ -120,6 +120,11 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 				fmt.Printf("Cleanup of sprint with number : %v\n", sprint.Number)
 
 				if !sprint.StartDate.IsZero() && !sprint.EndDate.IsZero() {
+					if sprint.StartDate.Time.After(time.Now()) || sprint.EndDate.Time.After(time.Now()) {
+						fmt.Printf("Sprint start date or end data is after current time: %v - %v\n", sprint.StartDate.Time.After(time.Now()), sprint.EndDate.Time.After(time.Now()))
+						continue
+					}
+
 					cleanedSummaryList = append(cleanedSummaryList, sprint)
 
 					if startAt.IsZero() || startAt.After(sprint.StartDate.Time) {
@@ -301,8 +306,14 @@ func NewCmd(cfg config.Config, pullRequestService pullRequestService, repository
 					Ratio:   fmt.Sprintf("%.2f", float64(totalCreated)/float64(totalMerged)),
 				}
 
+				if totalMerged == 0 {
+					prFlowRatio["Summary"].Ratio = fmt.Sprintf("%.2f", float64(totalCreated))
+				}
+
 				err = googleSheetsService.WritePullRequestReportData(spreadsheetID, prSheetName, fmt.Sprintf("A%d", sprint.Number+1), &sprint, prMetrics, prFlowRatio["Summary"])
 				if err != nil {
+					fmt.Printf("%#v\n", prMetrics)
+					fmt.Printf("%#v\n", prFlowRatio["Summary"])
 					fmt.Printf("Failed to write report for pull requests for sprint with error : %v\n", err)
 					return err
 				}
