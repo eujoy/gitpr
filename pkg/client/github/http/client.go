@@ -204,9 +204,9 @@ func (c *Client) CreateRelease(authToken, repoOwner, repository, tagName string,
 
 	values := map[string]interface{}{
 		"tag_name": tagName,
-		"draft": draftRelease,
-		"body": body,
-		"name": name,
+		"draft":    draftRelease,
+		"body":     body,
+		"name":     name,
 	}
 	jsonValue, _ := json.Marshal(values)
 
@@ -246,8 +246,106 @@ func (c *Client) GetReleaseList(authToken, repoOwner, repository string, pageSiz
 	return releaseList, err
 }
 
+// GetWorkflowExecutions retrieves the executions of the workflows of a repository.
+func (c *Client) GetWorkflowExecutions(authToken, repoOwner, repository, startDateStr, endDateStr string, pageSize, pageNumber int) ([]domain.Workflow, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.WorkflowRuns)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{pageSize}", strconv.Itoa(pageSize), -1)
+	URL = strings.Replace(URL, "{pageNumber}", strconv.Itoa(pageNumber), -1)
+	URL = strings.Replace(URL, "{createdFrom}", startDateStr, -1)
+	URL = strings.Replace(URL, "{createdTo}", endDateStr, -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return []domain.Workflow{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var workflowResp domain.WorkflowResponse
+	err = c.getResponse(req, &workflowResp, nil)
+	if err != nil {
+		return []domain.Workflow{}, err
+	}
+
+	return workflowResp.WorkflowRuns, nil
+}
+
+// GetWorkflowsOfRepository retrieves and returns all the workflows of a repository.
+func (c *Client) GetWorkflowsOfRepository(authToken, repoOwner, repository string) ([]domain.Workflow, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.WorkflowsOfRepository)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return []domain.Workflow{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var workflowResp domain.WorkflowResponse
+	err = c.getResponse(req, &workflowResp, nil)
+	if err != nil {
+		return []domain.Workflow{}, err
+	}
+
+	return workflowResp.WorkflowDetails, nil
+}
+
+// GetWorkflowTiming retrieves the timing details of a workflow.
+func (c *Client) GetWorkflowTiming(authToken, repoOwner, repository string, runID int) (domain.WorkflowTiming, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.WorkflowTiming)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{run_id}", strconv.Itoa(runID), -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return domain.WorkflowTiming{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var workflowTimingResp domain.WorkflowTiming
+	err = c.getResponse(req, &workflowTimingResp, nil)
+	if err != nil {
+		return domain.WorkflowTiming{}, err
+	}
+
+	return workflowTimingResp, nil
+}
+
+// GetWorkflowUsage retrieves the timing details of a workflow.
+func (c *Client) GetWorkflowUsage(authToken, repoOwner, repository string, workflowID int) (domain.WorkflowTiming, error) {
+	URL := fmt.Sprintf("%s%s", c.configuration.Clients.Github.ApiUrl, c.configuration.Clients.Github.Endpoints.WorkflowUsage)
+	URL = strings.Replace(URL, "{repoOwner}", repoOwner, -1)
+	URL = strings.Replace(URL, "{repository}", repository, -1)
+	URL = strings.Replace(URL, "{workflowID}", strconv.Itoa(workflowID), -1)
+
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return domain.WorkflowTiming{}, err
+	}
+
+	req.Header.Add("Accept", c.configuration.Clients.Github.Headers.Accept)
+	req.Header.Add("Authorization", fmt.Sprintf("token %s", authToken))
+
+	var workflowTimingResp domain.WorkflowTiming
+	err = c.getResponse(req, &workflowTimingResp, nil)
+	if err != nil {
+		return domain.WorkflowTiming{}, err
+	}
+
+	return workflowTimingResp, nil
+}
+
 // getResponse makes the actual request and converts the response to the respective required format.
-// Also, it parses the meta data in case it is required.
+// Also, it parses the metadata in case it is required.
 func (c *Client) getResponse(req *http.Request, data interface{}, meta *domain.Meta) error {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

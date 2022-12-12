@@ -14,6 +14,7 @@ import (
 	"github.com/eujoy/gitpr/internal/infra/command/releasereport"
 	"github.com/eujoy/gitpr/internal/infra/command/userrepos"
 	"github.com/eujoy/gitpr/internal/infra/command/widget"
+	"github.com/eujoy/gitpr/internal/infra/command/workflows"
 	"github.com/urfave/cli/v2"
 )
 
@@ -35,12 +36,20 @@ type repositoryService interface {
 	PrintCommitList(commitList []domain.Commit, useTmpl string) (string, error)
 }
 
+type workflowService interface {
+	GetWorkflowExecutions(authToken, repoOwner, repository, startDateStr, endDateStr string, pageSize, pageNumber int) ([]domain.Workflow, error)
+	GetWorkflowsOfRepository(authToken, repoOwner, repository string) ([]domain.Workflow, error)
+	GetWorkflowTiming(authToken, repoOwner, repository string, runID int) (domain.WorkflowTiming, error)
+	GetWorkflowUsage(authToken, repoOwner, repository string, workflowID int) (domain.WorkflowTiming, error)
+}
+
 type tablePrinter interface {
 	PrintRepos(repos []domain.Repository)
 	PrintPullRequest(pullRequests []domain.PullRequest)
 	PrintPullRequestFlowRatio(flowRatioData map[string]*domain.PullRequestFlowRatio)
 	PrintPullRequestMetrics(pullRequests domain.PullRequestMetrics)
 	PrintReleaseReport(releaseReport domain.ReleaseReport, captionText string)
+	PrintWorkflowCosts(workflowBilling []domain.WorkflowBilling)
 }
 
 type utilities interface {
@@ -57,18 +66,20 @@ type Builder struct {
 	userReposService    userReposService
 	pullRequestsService pullRequestsService
 	repositoryService   repositoryService
+	workflowService     workflowService
 	tablePrinter        tablePrinter
 	utils               utilities
 }
 
 // NewBuilder creates and returns a new command builder.
-func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, tablePrinter tablePrinter, utils utilities) *Builder {
+func NewBuilder(cfg config.Config, userReposService userReposService, pullRequestsService pullRequestsService, repositoryService repositoryService, workflowService workflowService, tablePrinter tablePrinter, utils utilities) *Builder {
 	return &Builder{
 		commands:            []*cli.Command{},
 		cfg:                 cfg,
 		userReposService:    userReposService,
 		pullRequestsService: pullRequestsService,
 		repositoryService:   repositoryService,
+		workflowService:     workflowService,
 		tablePrinter:        tablePrinter,
 		utils:               utils,
 	}
@@ -147,6 +158,14 @@ func (b *Builder) ReleaseReport() *Builder {
 // PublishPullRequestMetrics retrieves the metrics for pull requests and publishes them to google spreadsheets.
 func (b *Builder) PublishPullRequestMetrics() *Builder {
 	publishMetricsCmd := publishmetrics.NewCmd(b.cfg, b.pullRequestsService, b.repositoryService, b.utils)
+	b.commands = append(b.commands, publishMetricsCmd)
+
+	return b
+}
+
+// Workflows retrieves the details of the workflows of a repository.
+func (b *Builder) Workflows() *Builder {
+	publishMetricsCmd := workflows.NewCmd(b.cfg, b.workflowService, b.tablePrinter, b.utils)
 	b.commands = append(b.commands, publishMetricsCmd)
 
 	return b
