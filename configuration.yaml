@@ -21,8 +21,16 @@ clients:
       get_user_repos: "/user/repos?per_page={pageSize}&page={pageNumber}"
       get_user_pull_requests_for_repo: "/repos/{repoOwner}/{repository}/pulls?state={prState}&per_page={pageSize}&page={pageNumber}&{baseBranch}&sort=created&direction=desc"
       post_create_release: "/repos/{repoOwner}/{repository}/releases"
+      get_workflow_details: "/repos/{repoOwner}/{repository}/actions/runs?created={createdFrom}..{createdTo}&per_page={pageSize}&page={pageNumber}&status=completed"
+      get_workflows_of_repository: "/repos/{repoOwner}/{repository}/actions/workflows?page=1&per_page=100"
+      get_workflow_execution_timing: "/repos/{repoOwner}/{repository}/actions/runs/{run_id}/timing"
+      get_workflow_usage: "/repos/{repoOwner}/{repository}/actions/workflows/{workflowID}/timing"
     headers:
       accept: "application/vnd.github.sailor-v-preview+json"
+    billing:
+      linux: 0.008
+      macOS: 0.08
+      windows: 0.016
 pagination:
   next: "Next"
   previous: "Previous"
@@ -35,7 +43,7 @@ settings:
   available_clients: ["github"]
   base_branch: "master"
   default_client: "github"
-  page_size: 10
+  page_size: 0
   pull_request_state: "open"
 spinner:
   hide_cursor: true

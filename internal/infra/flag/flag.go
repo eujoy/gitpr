@@ -8,7 +8,7 @@ import (
 )
 
 // builder describes the flag builder definition.
-type builder struct{
+type builder struct {
     cfg            config.Config
     flagDefinition []cli.Flag
 }
@@ -16,7 +16,7 @@ type builder struct{
 // New creates and returns a new flag builder.
 func New(cfg config.Config) *builder {
     return &builder{
-        cfg: cfg,
+        cfg:            cfg,
         flagDefinition: []cli.Flag{},
     }
 }
@@ -112,7 +112,7 @@ func (b *builder) AppendStateFlag(destination *string) *builder {
 }
 
 // AppendStartDateFlag appends the 'start_date' flag in the flag list.
-func (b *builder) AppendStartDateFlag(destination *string) *builder {
+func (b *builder) AppendStartDateFlag(destination *string, required bool) *builder {
     b.flagDefinition = append(
         b.flagDefinition,
         &cli.StringFlag{
@@ -121,7 +121,7 @@ func (b *builder) AppendStartDateFlag(destination *string) *builder {
             Usage:       "Start date of the time range to check. [Expected format: 'yyyy-mm-dd']",
             Value:       "",
             Destination: destination,
-            Required:    false,
+            Required:    required,
         },
     )
 
@@ -129,7 +129,7 @@ func (b *builder) AppendStartDateFlag(destination *string) *builder {
 }
 
 // AppendEndDateFlag appends the 'end_date' flag in the flag list.
-func (b *builder) AppendEndDateFlag(destination *string) *builder {
+func (b *builder) AppendEndDateFlag(destination *string, required bool) *builder {
     b.flagDefinition = append(
         b.flagDefinition,
         &cli.StringFlag{
@@ -138,7 +138,7 @@ func (b *builder) AppendEndDateFlag(destination *string) *builder {
             Usage:       "End date of the time range to check. [Expected format: 'yyyy-mm-dd']",
             Value:       "",
             Destination: destination,
-            Required:    false,
+            Required:    required,
         },
     )
 
@@ -311,14 +311,14 @@ func (b *builder) AppendSprintSummary(destination *string) *builder {
 }
 
 // AppendPageSizeFlag appends the 'page_size' flag in the flag list.
-func (b *builder) AppendPageSizeFlag(destination *int) *builder {
+func (b *builder) AppendPageSizeFlag(destination *int, defaultSize int) *builder {
     b.flagDefinition = append(
         b.flagDefinition,
         &cli.IntFlag{
             Name:        "page_size",
             Aliases:     []string{"s"},
             Usage:       "Size of each page to load.",
-            Value:       b.cfg.Settings.PageSize,
+            Value:       defaultSize,
             Destination: destination,
             Required:    false,
         },
@@ -327,7 +327,7 @@ func (b *builder) AppendPageSizeFlag(destination *int) *builder {
     return b
 }
 
-// AppendVersionPatternWithServiceInitials appends the 'version_pattern_with_service_initials' flag in the flag list.
+// AppendVersionPatternWithServiceInitialsFlag appends the 'version_pattern_with_service_initials' flag in the flag list.
 func (b *builder) AppendVersionPatternWithServiceInitialsFlag(destination *int, versionPatternWithServiceInitials string) *builder {
     b.flagDefinition = append(
         b.flagDefinition,

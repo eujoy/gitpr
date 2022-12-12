@@ -22,6 +22,10 @@ type Client interface {
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
 	GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
+	GetWorkflowExecutions(authToken, repoOwner, repository, startDateStr, endDateStr string, pageSize, pageNumber int) ([]domain.Workflow, error)
+	GetWorkflowsOfRepository(authToken, repoOwner, repository string) ([]domain.Workflow, error)
+	GetWorkflowTiming(authToken, repoOwner, repository string, runID int) (domain.WorkflowTiming, error)
+	GetWorkflowUsage(authToken, repoOwner, repository string, workflowID int) (domain.WorkflowTiming, error)
 }
 
 // Factory describes the factory for allowing the usage of several external clients of git repos.

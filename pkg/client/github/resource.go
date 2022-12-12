@@ -14,14 +14,18 @@ type githubClient interface {
 	GetReviewStateOfPullRequest(authToken, repoOwner, repository string, pullRequestNumber int) ([]domain.PullRequestReview, error)
 	CreateRelease(authToken, repoOwner, repository, tagName string, draftRelease bool, name, body string) error
 	GetReleaseList(authToken, repoOwner, repository string, pageSize, pageNumber int) ([]domain.Release, error)
+	GetWorkflowExecutions(authToken, repoOwner, repository, startDateStr, endDateStr string, pageSize, pageNumber int) ([]domain.Workflow, error)
+	GetWorkflowsOfRepository(authToken, repoOwner, repository string) ([]domain.Workflow, error)
+	GetWorkflowTiming(authToken, repoOwner, repository string, runID int) (domain.WorkflowTiming, error)
+	GetWorkflowUsage(authToken, repoOwner, repository string, workflowID int) (domain.WorkflowTiming, error)
 }
 
-// Resource describes the github resource.
+// Resource describes the GitHub resource.
 type Resource struct {
 	githubClient githubClient
 }
 
-// NewResource prepares and returns a github resource.
+// NewResource prepares and returns a GitHub resource.
 func NewResource(githubClient githubClient) *Resource {
 	return &Resource{
 		githubClient: githubClient,
@@ -40,7 +44,7 @@ func (r *Resource) GetDiffBetweenTags(authToken, repoOwner, repository, existing
 	return diffBetweenTags, err
 }
 
-// GetUserRepos retrieves all the user repositories from github.
+// GetUserRepos retrieves all the user repositories from GitHub.
 func (r *Resource) GetUserRepos(authToken string, pageSize int, pageNumber int) (domain.UserReposResponse, error) {
 	userRepos, err := r.githubClient.GetUserRepos(authToken, pageSize, pageNumber)
 	return userRepos, err
@@ -82,3 +86,26 @@ func (r *Resource) GetReleaseList(authToken, repoOwner, repository string, pageS
 	return releaseList, err
 }
 
+// GetWorkflowExecutions retrieves the executions of the workflows of a repository.
+func (r *Resource) GetWorkflowExecutions(authToken, repoOwner, repository, startDateStr, endDateStr string, pageSize, pageNumber int) ([]domain.Workflow, error) {
+	workflows, err := r.githubClient.GetWorkflowExecutions(authToken, repoOwner, repository, startDateStr, endDateStr, pageSize, pageNumber)
+	return workflows, err
+}
+
+// GetWorkflowsOfRepository retrieves and returns all the workflows of a repository.
+func (r *Resource) GetWorkflowsOfRepository(authToken, repoOwner, repository string) ([]domain.Workflow, error) {
+	workflows, err := r.githubClient.GetWorkflowsOfRepository(authToken, repoOwner, repository)
+	return workflows, err
+}
+
+// GetWorkflowTiming retrieves the timing details of a workflow.
+func (r *Resource) GetWorkflowTiming(authToken, repoOwner, repository string, runID int) (domain.WorkflowTiming, error) {
+	workflowTiming, err := r.githubClient.GetWorkflowTiming(authToken, repoOwner, repository, runID)
+	return workflowTiming, err
+}
+
+// GetWorkflowUsage retrieves the timing details of a workflow.
+func (r *Resource) GetWorkflowUsage(authToken, repoOwner, repository string, workflowID int) (domain.WorkflowTiming, error) {
+	workflowTiming, err := r.githubClient.GetWorkflowUsage(authToken, repoOwner, repository, workflowID)
+	return workflowTiming, err
+}

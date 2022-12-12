@@ -34,15 +34,17 @@ AUTHOR:
    Angelos Giannis
 
 COMMANDS:
-   find, f             Find the pull requests of multiple user repositories.
-   pull-requests, p    Retrieves and prints all the pull requests of a user for a repository.
-   user-repos, u       Retrieves and prints the repos of an authenticated user.
-   widget, w           Display a widget based terminal which will include all the details required.
-   commit-list, c      Retrieves and prints the list of commits between two provided tags or commits.
-   create-release, cr  Retrieves all the commits between two tags and creates a list of them to be used a release description..
-   pr-metrics, m       Retrieves and prints the number of pull requests for a repository that have been created during a specific time period as well as the lead time of those pull requests.
-   release-report, r   Retrieves the releases that were published and/or created within a time range for a repository and prints a report based on them.
-   help, h             Shows a list of commands or help for one command
+   find, f              Find the pull requests of multiple user repositories.
+   pull-requests, p     Retrieves and prints all the pull requests of a user for a repository.
+   user-repos, u        Retrieves and prints the repos of an authenticated user.
+   widget, w            Display a widget based terminal which will include all the details required.
+   commit-list, c       Retrieves and prints the list of commits between two provided tags or commits.
+   create-release, cr   Retrieves all the commits between two tags and creates a list of them to be used a release description..
+   pr-metrics, m        Retrieves and prints the number of pull requests for a repository that have been created during a specific time period as well as the lead time of those pull requests.
+   release-report, r    Retrieves the releases that were published and/or created within a time range for a repository and prints a report based on them.
+   publish-metrics, pm  Retrieves the metric details for a list of sprints, prepares the report information for each one of them and publishes the report data the provided google spreadsheet.
+   workflows, wf_exec   Retrieves and prints the workflow executions of a repository.
+   help, h              Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --help, -h     show help (default: false)
@@ -198,6 +200,59 @@ OPTIONS:
    --default_version_pattern, --dvp                              Enables the default release version pattern to be used. (default pattern: ^(v[\d]+.[\d]+.[\d]+)$) (default: false)
    --version_pattern_with_service_initials value, --vpwsi value  Enables the release version pattern that uses the provided number of letters for service initials to be used. [pattern format: ^(v[\d]+.[\d]+.[\d]+-(\w){numOfInitialLetters,numOfInitialLetters})$] (default: 0)
    --help, -h                                                    show help (default: false)
+```
+
+## Usage of `workflows` command
+
+```text
+[~/gitpr]$ go run cmd/gitpr/main.go workflows -h
+NAME:
+   GitPullRequests workflows - Retrieves and prints the workflow executions of a repository.
+
+USAGE:
+   GitPullRequests workflows command [command options] [arguments...]
+
+COMMANDS:
+   runs, r      Retrieves and prints the runs of a repository for a given amount of time.
+   billable, b  Retrieves and prints summary of billing for all workflows of a repository duting the current billing cycle.
+   help, h      Shows a list of commands or help for one command
+
+OPTIONS:
+   --auth_token value, -t value  Github authorization token. (default: "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")
+   --owner value, -o value       Owner of the repository to use.
+   --repository value, -r value  Repository name to use.
+   --help, -h                    show help (default: false)
+```
+
+### Usage of `workflows runs` command
+
+```text
+[~/gitpr]$ go run cmd/gitpr/main.go workflows -o owner -r repo runs -h
+NAME:
+   GitPullRequests workflows runs - Retrieves and prints the runs of a repository for a given amount of time.
+
+USAGE:
+   GitPullRequests workflows runs [command options] [arguments...]
+
+OPTIONS:
+   --start_date value, -f value  Start date of the time range to check. [Expected format: 'yyyy-mm-dd']
+   --end_date value, -e value    End date of the time range to check. [Expected format: 'yyyy-mm-dd']
+   --page_size value, -s value   Size of each page to load. (default: 30)
+   --help, -h                    show help (default: false)
+```
+
+### Usage of `workflows billable` command
+
+```text
+[~/gitpr]$ go run cmd/gitpr/main.go workflows -o owner -r repo billable -h
+NAME:
+   GitPullRequests workflows billable - Retrieves and prints summary of billing for all workflows of a repository duting the current billing cycle.
+
+USAGE:
+   GitPullRequests workflows billable [command options] [arguments...]
+
+OPTIONS:
+   --help, -h  show help (default: false)
 ```
 
 ----
